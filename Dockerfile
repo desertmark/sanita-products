@@ -6,7 +6,4 @@ RUN npm i
 
 COPY . ./
 
-ARG TMDB_KEY
-ENV TMDB_KEY=$TMDB_KEY
-
 ENTRYPOINT ["npm", "start"]
