@@ -72,7 +72,7 @@ export class SqlBaseRepository {
       .join();
     const fks = cols
       .filter((col) => col.fk)
-      .map((col) => `FOREIGN KEY (${col.name}) REFERENCES ${col.fk.foreignTable}(${col.fk.foreignCol})`);
+      .map((col) => `FOREIGN KEY (${col.name}) REFERENCES ${col.fk.foreignTable}(${col.fk.foreignCol}),`);
     const sql = `
       ${force ? dropSql : ""}
       IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='${name}' and xtype='U')
@@ -82,7 +82,7 @@ export class SqlBaseRepository {
               (col) => `${col.name} ${col.type} ${col.notNull ? "NOT NULL" : ""} ${col.identity ? "IDENTITY(1,1)" : ""}`
             )
             .join(",\n\t")},
-          ${pks?.length ? `CONSTRAINT PK_${name} PRIMARY KEY(${pks})` : ""}
+          ${pks?.length ? `CONSTRAINT PK_${name} PRIMARY KEY(${pks}),` : ""}
           ${fks.join()}
         );
     `;
