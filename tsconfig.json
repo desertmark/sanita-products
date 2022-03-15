@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "lib": ["es2018", "esnext.asynciterable"],
+    "types": ["reflect-metadata", "node"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "outDir": "./dist",
+    "baseUrl": "src",
+    "resolveJsonModule": true,
+    "paths": {
+      "@models/*": ["models/*"],
+      "@controllers/*": ["controllers/*"],
+      "@config/*": ["config/*"],
+      "@services/*": ["services/*"],
+      "@repositories/*": ["repositories/*"]
+    }
+  },
+  "include": ["./src"]
+}

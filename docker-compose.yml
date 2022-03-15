@@ -1,0 +1,27 @@
+version: "3"
+services:
+  sanita-products:
+    build: .
+    env_file: ./.env
+    image: desertmark/sanita-products
+    ports:
+      - "3001:3001"
+  
+  keycloak:
+    image: jboss/keycloak
+    command:
+      - -Dkeycloak.migration.action=import
+        -Dkeycloak.migration.file=/opt/jboss/keycloak/imports/master-realm.json
+        -Dkeycloak.profile.feature.upload_scripts=enabled
+        -Dkeycloak.migration.provider=singleFile
+        -Dkeycloak.migration.strategy=OVERWRITE_EXISTING
+    environment:
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: password
+      DB_VENDOR: h2
+    volumes:
+      # Forwards the local Docker socket to the container.
+      - /var/run/docker.sock:/var/run/docker-host.sock
+      - ./.devcontainer/imports:/opt/jboss/keycloak/imports
+    ports:
+      - 8080:8080
