@@ -6,7 +6,20 @@ services:
     image: desertmark/sanita-products
     ports:
       - "3001:3001"
-  
+    networks:
+      - sanita
+
+  mssql:
+    #docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=yourStrong(!)Password" -p 1433:1433 -d mcr.microsoft.com/mssql/server:2019-CU15-ubuntu-20.04
+    image: mcr.microsoft.com/mssql/server:2019-CU15-ubuntu-20.04
+    ports:
+      - "1433:1433"
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: "f3rn4nd0.64"
+    networks:
+      - sanita
+
   keycloak:
     image: jboss/keycloak
     command:
@@ -15,13 +28,19 @@ services:
         -Dkeycloak.profile.feature.upload_scripts=enabled
         -Dkeycloak.migration.provider=singleFile
         -Dkeycloak.migration.strategy=OVERWRITE_EXISTING
+    env_file: ./.env
     environment:
       KEYCLOAK_USER: admin
       KEYCLOAK_PASSWORD: password
-      DB_VENDOR: h2
+      DB_VENDOR: mssql
+
     volumes:
       # Forwards the local Docker socket to the container.
       - /var/run/docker.sock:/var/run/docker-host.sock
       - ./.devcontainer/imports:/opt/jboss/keycloak/imports
     ports:
-      - 8080:8080
+      - 9090:8080
+    networks:
+      - sanita
+networks:
+  sanita:

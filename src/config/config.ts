@@ -5,19 +5,30 @@ const envPath = path.resolve(rootPath, ".env");
 dotenv({ path: envPath });
 
 const {
-  DB_CONNECTION_STRING,
+  DB_ADDR,
+  DB_PORT,
+  DB_DATABASE,
+  DB_USER,
+  DB_PASSWORD,
   AUTH_BASE_URL,
   AUTH_CLIENT_ID,
   AUTH_CLIENT_SECRET,
   AUTH_REALM_NAME,
   PORT,
   HOST,
+  DB_GENERATE_SCHEMA,
+  DB_GENERATE_SCHEMA_FORCE,
 } = process.env;
 
 export abstract class IConfig {
   db: {
-    connectionString: string;
+    host: string;
+    port: number;
+    user: string;
+    password: string;
     name: string;
+    generateSchema: boolean;
+    generateSchemaForce: boolean;
   };
   auth: {
     client_id: string;
@@ -35,8 +46,13 @@ export abstract class IConfig {
 
 export const config: IConfig = {
   db: {
-    connectionString: DB_CONNECTION_STRING,
-    name: "sanita",
+    host: DB_ADDR || "localhost",
+    port: parseInt(DB_PORT) || 1433,
+    user: DB_USER || "sa",
+    password: DB_PASSWORD,
+    name: DB_DATABASE || "sanita",
+    generateSchema: DB_GENERATE_SCHEMA === "true",
+    generateSchemaForce: DB_GENERATE_SCHEMA_FORCE === "true",
   },
   auth: {
     client_id: AUTH_CLIENT_ID,
