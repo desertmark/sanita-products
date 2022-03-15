@@ -1,7 +1,7 @@
 import { IConfig } from "@config/config";
 import { Database, SqlColDefinition } from "@models/database.model";
 import { inject, injectable } from "inversify";
-import { Connection, ParameterOptions, Request, TediousType, TYPES } from "tedious";
+import { ColumnValue, Connection, ParameterOptions, Request, TediousType, TYPES } from "tedious";
 
 export interface SqlParameter {
   name: string;
@@ -46,7 +46,7 @@ export class SqlBaseRepository {
           console.log("Failed to connect to SQL database.", { error });
           rej(error);
         } else {
-          console.log("SQL database connected.", { error });
+          console.log("SQL database connected.");
           res();
         }
       });
@@ -106,6 +106,7 @@ export class SqlBaseRepository {
   }
 
   async executeQuery<T>(sql: string, params?: SqlParameter[]): Promise<T[]> {
+    await this.connect();
     return new Promise((res, rej) => {
       var req = new Request(sql, (error, rowCount, rows) => {
         if (error) {
@@ -114,8 +115,14 @@ export class SqlBaseRepository {
           rej(error);
         }
         console.log(`SqlBaseRepository.executeQuery: ${rowCount} rows returned`);
-        res(rows as T[]);
       });
+      let rows = [];
+      req.on("row", (cols) => {
+        const row = {};
+        cols.forEach((c) => (row[c.metadata.colName] = c.value));
+        rows.push(row);
+      });
+      req.on("requestCompleted", () => res(rows));
       params?.forEach((param) => req.addParameter.apply(req, param));
       this.connection.execSql(req);
       this.closeConnection(req);

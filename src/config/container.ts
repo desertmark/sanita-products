@@ -7,6 +7,8 @@ import { HealthController } from "@controllers/health.controller";
 import { AuthController } from "@controllers/auth.controller";
 import { AuthRepository } from "@repositories/auth.repository";
 import { SqlBaseRepository } from "@repositories/sql-base.repository";
+import { ProductsController } from "@controllers/products.controller";
+import { ProductsRepository } from "@repositories/products.repository";
 
 export async function createContainer(): Promise<Container> {
   const container = new Container();
@@ -19,14 +21,16 @@ export async function createContainer(): Promise<Container> {
   container.bind<string>("kcPublicKey").toConstantValue(await publicKeyFactory(config));
 
   // Repositories
-  container.bind<SqlBaseRepository>(SqlBaseRepository).toSelf();
+  container.bind<SqlBaseRepository>(SqlBaseRepository).toSelf().inSingletonScope();
   await container.get<SqlBaseRepository>(SqlBaseRepository).init();
 
   container.bind<AuthRepository>(AuthRepository).toSelf();
+  container.bind<ProductsRepository>(ProductsRepository).toSelf();
 
   // Controllers
   container.bind<HealthController>(HealthController).toSelf();
   container.bind<AuthController>(AuthController).toSelf();
+  container.bind<ProductsController>(ProductsController).toSelf();
   return container;
 }
 export default createContainer;

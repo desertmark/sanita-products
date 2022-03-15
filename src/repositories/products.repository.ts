@@ -2,10 +2,10 @@ import { Database } from "@models/database.model";
 import { inject, injectable } from "inversify";
 import { SqlBaseRepository } from "./sql-base.repository";
 
-const _filter = require("lodash/filter");
-const { queryFilter, categoryFilter } = require("./articles-filter-factory");
-const { DatabaseError } = require("../util/errors");
-const { get, omit, isEmpty } = require("lodash");
+// const _filter = require("lodash/filter");
+// const { queryFilter, categoryFilter } = require("./articles-filter-factory");
+// const { DatabaseError } = require("../util/errors");
+// const { get, omit, isEmpty } = require("lodash");
 
 @injectable()
 export class ProductsRepository {
@@ -13,6 +13,10 @@ export class ProductsRepository {
 
   findById(productId: string) {
     return this.baseRepository.findById(productId, Database.Tables.Products);
+  }
+
+  list() {
+    return this.baseRepository.list(Database.Tables.Products);
   }
 
   // findByCode(code) {
