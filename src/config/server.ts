@@ -1,9 +1,9 @@
 import bodyParser from "body-parser";
-import express from "express";
 import { InversifyExpressServer } from "inversify-express-utils";
 import { IConfig } from "./config";
 import createContainer from "./container";
 import fileUpload from "express-fileupload";
+import cors from 'cors';
 
 export async function serverBuilder() {
   const container = await createContainer();
@@ -13,6 +13,7 @@ export async function serverBuilder() {
 
   const server = new InversifyExpressServer(container)
     .setConfig((app) => {
+      app.use(cors())
       app.use(bodyParser.json());
       app.use(fileUpload());
     })

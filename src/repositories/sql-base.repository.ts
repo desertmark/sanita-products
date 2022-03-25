@@ -17,15 +17,16 @@ export interface SqlQueryOptions {
 
 @injectable()
 export class SqlBaseRepository {
-  constructor(@inject("config") private config: IConfig, @inject(Logger) private logger: Logger) {}
+  constructor(@inject("config") private config: IConfig, @inject(Logger) private logger: Logger) { }
 
   async init(): Promise<void> {
     if (this.config.db.generateSchema) {
+      await this.createDb()
       await this.createSchema(this.config.db.generateSchemaForce);
     }
   }
 
-  async connect(): Promise<Connection> {
+  async connect(dbName?: string): Promise<Connection> {
     this.logger.info("Attempt to connect to SQL Database...");
     return new Promise((res, rej) => {
       const { host, name, password, port, user, trustServerCertificate } = this.config.db;
@@ -40,7 +41,7 @@ export class SqlBaseRepository {
         },
         options: {
           encrypt: true,
-          database: name,
+          database: dbName || name,
           port,
           trustServerCertificate,
         },
@@ -55,6 +56,17 @@ export class SqlBaseRepository {
         }
       });
     });
+  }
+
+  async createDb() {
+    const connection = await this.connect('master');
+    const req = new Request(`CREATE DATABASE ${this.config.db.name}`, (error) => {
+      if (error) {
+        this.logger.error('Failed to create db', this.config.db);
+      }
+    });
+    await connection.execSql(req);
+    this.closeConnection(req, connection);
   }
 
   async createSchema(force?: boolean) {
@@ -87,10 +99,10 @@ export class SqlBaseRepository {
       IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='${name}' and xtype='U')
         CREATE TABLE ${name} (
           ${cols
-            .map(
-              (col) => `${col.name} ${col.type} ${col.notNull ? "NOT NULL" : ""} ${col.identity ? "IDENTITY(1,1)" : ""}`
-            )
-            .join(",\n\t")},
+        .map(
+          (col) => `${col.name} ${col.type} ${col.notNull ? "NOT NULL" : ""} ${col.identity ? "IDENTITY(1,1)" : ""}`
+        )
+        .join(",\n\t")},
           ${pks?.length ? `CONSTRAINT PK_${name} PRIMARY KEY(${pks}),` : ""}
           ${fks.join()}
         );

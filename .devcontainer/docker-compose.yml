@@ -35,20 +35,6 @@ services:
 
     # Overrides default command so things don't shut down after the process ends.
     command: /bin/sh -c "while sleep 1000; do :; done"
-  cosmos:
-    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
-    mem_limit: 3g
-    cpu_count: 2
-    environment:
-      AZURE_COSMOS_EMULATOR_PARTITION_COUNT: 10
-      AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE: "true"
-    volumes:
-      # Forwards the local Docker socket to the container.
-      - /var/run/docker.sock:/var/run/docker-host.sock
-    ports:
-      - 8081:8081
-      - 4000:4000
-
   keycloak:
     image: jboss/keycloak
     command:
@@ -67,4 +53,17 @@ services:
       - ./imports:/opt/jboss/keycloak/imports
     ports:
       - 8080:8080
+
+  mssql:
+    #docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=yourStrong(!)Password" -p 1433:1433 -d mcr.microsoft.com/mssql/server:2019-CU15-ubuntu-20.04
+    image: mcr.microsoft.com/mssql/server:2019-CU15-ubuntu-20.04
+    ports:
+      - "1433:1433"
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: "f3rn4nd0.64"
+    networks:
+      - sanita
+networks:
+  sanita:
  

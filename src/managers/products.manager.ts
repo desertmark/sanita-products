@@ -11,7 +11,7 @@ export class ProductsManager {
     @inject(ProductsRepository) private products: ProductsRepository,
     @inject(BulkManager) private bulkManager: BulkManager,
     @inject(Logger) private logger: Logger
-  ) {}
+  ) { }
 
   async insertMany(products: Omit<IProduct, "id">[]) {
     await this.bulkManager.processByChunk(products, this.products.insertMany.bind(this.products), {
@@ -28,17 +28,22 @@ export class ProductsManager {
   }
 
   async upsertMany(products: Omit<IProduct, "id">[]) {
-    const dbCodes = await this.products.listCodes();
-    const insertProducts = products.filter((p) => !dbCodes.includes(p.code));
-    const updateProducts = products.filter((p) => dbCodes.includes(p.code));
+    try {
+      const dbCodes = await this.products.listCodes();
+      const insertProducts = products.filter((p) => !dbCodes.includes(p.code));
+      const updateProducts = products.filter((p) => dbCodes.includes(p.code));
 
-    if (insertProducts?.length) {
-      await this.insertMany(insertProducts);
+      if (insertProducts?.length) {
+        await this.insertMany(insertProducts);
+      }
+      if (updateProducts?.length) {
+        await this.updateManyByCode(updateProducts);
+      }
+      this.logger.info("Upsert products completed :DDD");
+    } catch (error) {
+      this.logger.error('products-manager.upsertMany:', error);
+      throw error;
     }
-    if (updateProducts?.length) {
-      await this.updateManyByCode(updateProducts);
-    }
-    this.logger.info("Upsert products completed :DDD");
   }
 
   async updateManyFromGuidoliProducts(guidoliProducts: IGuidoliProduct[]) {

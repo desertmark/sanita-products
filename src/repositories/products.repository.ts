@@ -4,6 +4,7 @@ import { CommonUtils, SqlHelper } from "@utils/common.utils";
 import { ProductMapper } from "@utils/product.utils";
 import { inject, injectable } from "inversify";
 import { SqlBaseRepository } from "./sql-base.repository";
+import fs from 'fs';
 // const _filter = require("lodash/filter");
 // const { queryFilter, categoryFilter } = require("./articles-filter-factory");
 // const { DatabaseError } = require("../util/errors");
@@ -36,10 +37,11 @@ export class ProductsRepository {
     await this.baseRepository.executeQuery(sql, null, { timeout: 60000 });
   }
 
-  async updateManyByCode(products: Omit<Partial<IProduct>, "id" | "discounts">[]): Promise<void> {
+  async updateManyByCode(products: Omit<IProduct, "id">[]): Promise<void> {
     const sql = `
-    ${products.map((prod) => SqlHelper.updateTemplate(Database.Tables.Products, prod, "code")).join(";")}
+    ${products.map((prod) => SqlHelper.updateTemplate(Database.Tables.Products, ProductMapper.toDbProduct(prod), "code")).join(";")}
     `;
+    fs.writeFileSync('./updateManyByCode.sql', sql);
     await this.baseRepository.executeQuery(sql, null, { timeout: 60000 });
   }
 

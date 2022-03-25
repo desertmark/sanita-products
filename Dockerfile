@@ -1,4 +1,8 @@
 FROM node:16-alpine
+
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -y install --no-install-recommends mdb-tools
+
 WORKDIR /usr/src/app
 
 COPY package.json ./
