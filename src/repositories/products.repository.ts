@@ -1,7 +1,9 @@
 import { Database } from "@models/database.model";
+import { IProduct } from "@models/product.models";
+import { CommonUtils, SqlHelper } from "@utils/common.utils";
+import { ProductMapper } from "@utils/product.utils";
 import { inject, injectable } from "inversify";
 import { SqlBaseRepository } from "./sql-base.repository";
-
 // const _filter = require("lodash/filter");
 // const { queryFilter, categoryFilter } = require("./articles-filter-factory");
 // const { DatabaseError } = require("../util/errors");
@@ -11,13 +13,51 @@ import { SqlBaseRepository } from "./sql-base.repository";
 export class ProductsRepository {
   constructor(@inject(SqlBaseRepository) private baseRepository: SqlBaseRepository) {}
 
-  findById(productId: string) {
-    return this.baseRepository.findById(productId, Database.Tables.Products);
+  async findById(productId: string) {
+    return await this.baseRepository.findById(productId, Database.Tables.Products);
   }
 
-  list() {
-    return this.baseRepository.list(Database.Tables.Products);
+  async list(): Promise<IProduct[]> {
+    const products = await this.baseRepository.list<IProduct>(Database.Tables.Products);
+    return products.map((prod) => CommonUtils.toCamelCaseRecord(prod));
   }
+
+  async listCodes(): Promise<number[]> {
+    const items = await this.baseRepository.list<{ Code: string }>(Database.Tables.Products, ["Code"]);
+    return items.map((item) => parseInt(item.Code));
+  }
+
+  async insertMany(products: Omit<IProduct, "id">[]): Promise<void> {
+    const sql = `
+      ${products
+        .map((prod) => SqlHelper.insertTemplate(Database.Tables.Products, ProductMapper.toDbProduct(prod)))
+        .join("")}
+    `;
+    await this.baseRepository.executeQuery(sql, null, { timeout: 60000 });
+  }
+
+  async updateManyByCode(products: Omit<Partial<IProduct>, "id" | "discounts">[]): Promise<void> {
+    const sql = `
+    ${products.map((prod) => SqlHelper.updateTemplate(Database.Tables.Products, prod, "code")).join(";")}
+    `;
+    await this.baseRepository.executeQuery(sql, null, { timeout: 60000 });
+  }
+
+  // async mergeMany(products: Omit<IProduct, "id">[]) {
+  //   const sql = `
+  //     ${products
+  //       .map((prod) => SqlHelper.upsertTemplate(Database.Tables.Products, ProductMapper.toDbProduct(prod), "code"))
+  //       .join("")}
+  //   `;
+  //   fs.writeFileSync("./mergeMany.sql", sql);
+  //   await this.baseRepository.executeQuery(sql, null, { timeout: 180000 });
+  // }
+
+  // async insertProducts(products: Omit<IProduct, "id">[]) {
+  //   const chunks = CommonUtils.getChunks<Omit<IProduct, "id">>(products, 2000);
+  //   const promises = chunks.map((chunk) => this.insertMany(chunk));
+  //   await Promise.all(promises);
+  // }
 
   // findByCode(code) {
   //     return this.Article.findOne({code: code}).populate('category');

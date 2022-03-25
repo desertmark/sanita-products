@@ -18,6 +18,8 @@ const {
   HOST,
   DB_GENERATE_SCHEMA,
   DB_GENERATE_SCHEMA_FORCE,
+  PARSE_SERVICE_URL,
+  NODE_TLS_REJECT_UNAUTHORIZED,
 } = process.env;
 
 export abstract class IConfig {
@@ -29,6 +31,7 @@ export abstract class IConfig {
     name: string;
     generateSchema: boolean;
     generateSchemaForce: boolean;
+    trustServerCertificate: boolean;
   };
   auth: {
     client_id: string;
@@ -42,6 +45,7 @@ export abstract class IConfig {
     port?: number;
     host?: string;
   };
+  parseServiceUrl: string;
 }
 
 export const config: IConfig = {
@@ -53,6 +57,7 @@ export const config: IConfig = {
     name: DB_DATABASE || "sanita",
     generateSchema: DB_GENERATE_SCHEMA === "true",
     generateSchemaForce: DB_GENERATE_SCHEMA_FORCE === "true",
+    trustServerCertificate: NODE_TLS_REJECT_UNAUTHORIZED === "0",
   },
   auth: {
     client_id: AUTH_CLIENT_ID,
@@ -66,4 +71,5 @@ export const config: IConfig = {
     port: parseInt(PORT) || 80,
     host: HOST || "localhost",
   },
+  parseServiceUrl: PARSE_SERVICE_URL,
 };

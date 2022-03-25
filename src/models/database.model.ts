@@ -13,7 +13,7 @@ export interface SqlColDefinition {
 
 const Int = TYPES.Int.name;
 const String = `${TYPES.VarChar.name}(255)`;
-const Decimal = `${TYPES.Decimal.name}(5,2)`;
+const Decimal = `${TYPES.Decimal.name}(10,2)`;
 const Money = TYPES.Money.name;
 export class Database {
   public static readonly Tables = {
@@ -35,7 +35,7 @@ export class Database {
         cols: [
           { name: "Id", type: Int, identity: true, notNull: true, pk: true },
           { name: "Description", type: String },
-          { name: "Code", type: Int },
+          { name: "Code", type: BigInt.name },
           { name: "CodeString", type: String },
           { name: "Utility", type: Decimal },
           { name: "ListPrice", type: Money },

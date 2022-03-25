@@ -13,10 +13,12 @@
     "resolveJsonModule": true,
     "paths": {
       "@models/*": ["models/*"],
+      "@utils/*": ["utils/*"],
       "@controllers/*": ["controllers/*"],
       "@config/*": ["config/*"],
       "@services/*": ["services/*"],
-      "@repositories/*": ["repositories/*"]
+      "@repositories/*": ["repositories/*"],
+      "@managers/*": ["managers/*"]
     }
   },
   "include": ["./src"]

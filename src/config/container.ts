@@ -9,10 +9,16 @@ import { AuthRepository } from "@repositories/auth.repository";
 import { SqlBaseRepository } from "@repositories/sql-base.repository";
 import { ProductsController } from "@controllers/products.controller";
 import { ProductsRepository } from "@repositories/products.repository";
+import { ParseManager } from "@managers/parse.manager";
+import { CategoriesRepository } from "@repositories/categories.repository";
+import { ProductsManager } from "@managers/products.manager";
+import { BulkManager } from "@managers/bulk.manager";
+import { Logger } from "@utils/logger";
 
 export async function createContainer(): Promise<Container> {
   const container = new Container();
-
+  // Utils
+  container.bind<Logger>(Logger).toSelf();
   // Config
   container.bind<IConfig>("config").toConstantValue(config);
 
@@ -21,11 +27,17 @@ export async function createContainer(): Promise<Container> {
   container.bind<string>("kcPublicKey").toConstantValue(await publicKeyFactory(config));
 
   // Repositories
-  container.bind<SqlBaseRepository>(SqlBaseRepository).toSelf().inSingletonScope();
+  container.bind<SqlBaseRepository>(SqlBaseRepository).toSelf();
   await container.get<SqlBaseRepository>(SqlBaseRepository).init();
 
   container.bind<AuthRepository>(AuthRepository).toSelf();
   container.bind<ProductsRepository>(ProductsRepository).toSelf();
+  container.bind<CategoriesRepository>(CategoriesRepository).toSelf();
+
+  // Managers
+  container.bind<ParseManager>(ParseManager).toSelf();
+  container.bind<BulkManager>(BulkManager).toSelf();
+  container.bind<ProductsManager>(ProductsManager).toSelf();
 
   // Controllers
   container.bind<HealthController>(HealthController).toSelf();
