@@ -1,11 +1,17 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-      {
-          "command": "npm start",
-          "name": "Start",
-          "request": "launch",
-          "type": "node-terminal"
-      }
-    ]
-  }
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "command": "npm test",
+      "name": "Tests",
+      "request": "launch",
+      "type": "node-terminal"
+    },
+    {
+      "command": "npm start",
+      "name": "Start",
+      "request": "launch",
+      "type": "node-terminal"
+    }
+  ]
+}

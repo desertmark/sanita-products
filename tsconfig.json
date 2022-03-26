@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es2018",
     "lib": ["es2018", "esnext.asynciterable"],
-    "types": ["reflect-metadata", "node"],
+    "types": ["reflect-metadata", "node", "jest"],
     "module": "commonjs",
     "moduleResolution": "node",
     "experimentalDecorators": true,

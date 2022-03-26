@@ -4,7 +4,7 @@ import { serverBuilder } from "@config/server";
 
 (async () => {
   try {
-    const server = await serverBuilder();
+    await serverBuilder();
   } catch (error) {
     console.error("Failed to start server", error);
   }

@@ -121,9 +121,21 @@ export class SqlBaseRepository {
     ]);
   }
 
-  async list<T>(tableName: string, fields?: string[]): Promise<T[]> {
-    const sql = `SELECT ${fields || "*"} FROM [${tableName}]`;
+  async list<T>(tableName: string, fields?: string[], orderBy = "Id", size = 100, offset = 0): Promise<T[]> {
+    const sql = `
+      SELECT ${fields || "*"} FROM [${tableName}]
+      ORDER BY ${orderBy}
+      OFFSET ${offset} ROWS FETCH NEXT ${size} ROWS ONLY
+    `;
     return await this.executeQuery(sql);
+  }
+
+  async count(tableName: string): Promise<number> {
+    const sql = `
+      SELECT COUNT(*) AS count FROM [${tableName}]
+    `;
+    const res = await this.executeQuery<{count: number}>(sql);
+    return res[0].count;
   }
 
   // async existBy(tableName: string, field)

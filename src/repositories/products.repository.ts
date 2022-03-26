@@ -5,6 +5,7 @@ import { ProductMapper } from "@utils/product.utils";
 import { inject, injectable } from "inversify";
 import { SqlBaseRepository } from "./sql-base.repository";
 import fs from 'fs';
+import { orderBy } from "lodash";
 // const _filter = require("lodash/filter");
 // const { queryFilter, categoryFilter } = require("./articles-filter-factory");
 // const { DatabaseError } = require("../util/errors");
@@ -21,6 +22,9 @@ export class ProductsRepository {
   async list(): Promise<IProduct[]> {
     const products = await this.baseRepository.list<IProduct>(Database.Tables.Products);
     return products.map((prod) => CommonUtils.toCamelCaseRecord(prod));
+  }
+  async count(): Promise<number> {
+    return await this.baseRepository.count(Database.Tables.Products);
   }
 
   async listCodes(): Promise<number[]> {

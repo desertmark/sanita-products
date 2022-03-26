@@ -24,7 +24,12 @@ export class ProductsController {
   @httpGet("/")
   async list(): Promise<any> {
     try {
-      return await this.products.list();
+      const total = await this.products.count();
+      const items = await this.products.list();
+      return {
+        total,
+        items,
+      }
     } catch (error) {
       console.error("Failed to list products.", error);
     }

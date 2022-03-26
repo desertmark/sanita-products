@@ -4,20 +4,28 @@ import { IConfig } from "./config";
 import createContainer from "./container";
 import fileUpload from "express-fileupload";
 import cors from 'cors';
+import { Server } from "http";
+import { Application } from "express";
+import { Container } from "inversify";
 
-export async function serverBuilder() {
+export async function serverBuilder(): Promise<{ server: Server; app: Application; container: Container }> {
   const container = await createContainer();
   const {
     server: { host, port },
   } = container.get<IConfig>("config");
 
-  const server = new InversifyExpressServer(container)
+  const app = new InversifyExpressServer(container)
     .setConfig((app) => {
       app.use(cors())
       app.use(bodyParser.json());
       app.use(fileUpload());
+      app.set('container', container);
     })
     .build();
-
-  return server.listen(port, () => console.log(`🚀  Server ready at http://${host}:${port}`));
+  const server = app.listen(port, () => console.log(`🚀  Server ready at http://${host}:${port}`));
+  return {
+    app,
+    server,
+    container,
+  }
 }
