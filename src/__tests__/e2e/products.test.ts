@@ -54,7 +54,7 @@ describe("Products E2E test", () => {
     });
 
     describe("Test MDB upload", () => {
-        it.only("Should insert all file products into the DB", async () => {
+        it.only("Should insert all file's products into the DB", async () => {
             // Arrange
             const expectedResult = [
                 {
@@ -107,7 +107,7 @@ describe("Products E2E test", () => {
                 }
             ]
             const form = new FormData();
-            const file = readFileSync(resolve('src', '__tests__', 'data', 'test.mdb'));
+            const file = readFileSync(resolve('src', '__tests__', 'data', 'insert.mdb'));
             form.append('file', file);
             // Act
             const res = await client.post('/products/mdb', form, {
