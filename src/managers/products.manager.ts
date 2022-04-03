@@ -10,8 +10,8 @@ export class ProductsManager {
   constructor(
     @inject(ProductsRepository) private products: ProductsRepository,
     @inject(BulkManager) private bulkManager: BulkManager,
-    @inject(Logger) private logger: Logger
-  ) { }
+    @inject(Logger) private logger: Logger,
+  ) {}
 
   async insertMany(products: Omit<IProduct, "id">[]) {
     await this.bulkManager.processByChunk(products, this.products.insertMany.bind(this.products), {
@@ -39,9 +39,9 @@ export class ProductsManager {
       if (updateProducts?.length) {
         await this.updateManyByCode(updateProducts);
       }
-      this.logger.info("Upsert products completed :DDD");
+      this.logger.info("Upsert products completed :D");
     } catch (error) {
-      this.logger.error('products-manager.upsertMany:', error);
+      this.logger.error("products-manager.upsertMany:", error);
       throw error;
     }
   }

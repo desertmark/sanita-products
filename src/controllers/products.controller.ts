@@ -9,6 +9,7 @@ import { GuidoliProduct, IGuidoliProduct, IProducto } from "@models/product.mode
 import { CategoryMapper } from "@utils/category.utils";
 import { ProductMapper } from "@utils/product.utils";
 import { ProductsManager } from "@managers/products.manager";
+import { CategoriesManager } from "@managers/categories.manager";
 
 type RequestWithFile = Request & { files?: Record<string, any> };
 
@@ -18,6 +19,7 @@ export class ProductsController {
     @inject(CategoriesRepository) private categories: CategoriesRepository,
     @inject(ProductsRepository) private products: ProductsRepository,
     @inject(ProductsManager) private productManager: ProductsManager,
+    @inject(CategoriesManager) private categoriesManager: CategoriesManager,
     @inject(ParseManager) private parseManager: ParseManager
   ) {}
 
@@ -29,7 +31,7 @@ export class ProductsController {
       return {
         total,
         items,
-      }
+      };
     } catch (error) {
       console.error("Failed to list products.", error);
     }
@@ -37,7 +39,6 @@ export class ProductsController {
 
   @httpPost("/mdb")
   async mdb(@request() req: RequestWithFile, @response() res: Response): Promise<any> {
-    // TODO: Move to manager.
     try {
       // Arrange Data
       const productos = await this.parseManager.mdbToJson<IProducto[]>(req.files.file as IFile, "lista");
@@ -45,7 +46,7 @@ export class ProductsController {
       const categories = CategoryMapper.extractCategories(productJsonList);
       res.sendStatus(204);
       // Insert
-      await this.categories.insertCategories(categories);
+      await this.categoriesManager.upsertMany(categories);
       const insertedCategories = await this.categories.list();
 
       const products = ProductMapper.toProductList(productJsonList, insertedCategories);

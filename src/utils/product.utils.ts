@@ -79,7 +79,7 @@ export class ProductMapper {
           amount: productJson.cashDiscount2 / 100,
         },
       ],
-      cardPrice: ProductCalculator.cardPrice(productJson.price, productJson.card),
+      cardPrice: ProductCalculator.cardPrice(productJson.price, productJson.card / 100),
     };
   }
 

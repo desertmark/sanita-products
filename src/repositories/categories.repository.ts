@@ -8,7 +8,7 @@ import { SqlBaseRepository } from "./sql-base.repository";
 export class CategoriesRepository {
   constructor(@inject(SqlBaseRepository) private baseRepository: SqlBaseRepository) {}
 
-  async insertCategories(categories: Omit<ICategory, "id">[]) {
+  async insertMany(categories: Omit<ICategory, "id">[]) {
     const sql = `
       ${categories.map((cat) => SqlHelper.insertTemplate(Database.Tables.Categories, cat)).join("")}
     `;

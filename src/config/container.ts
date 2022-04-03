@@ -12,6 +12,7 @@ import { ProductsRepository } from "@repositories/products.repository";
 import { ParseManager } from "@managers/parse.manager";
 import { CategoriesRepository } from "@repositories/categories.repository";
 import { ProductsManager } from "@managers/products.manager";
+import { CategoriesManager } from "@managers/categories.manager";
 import { BulkManager } from "@managers/bulk.manager";
 import { Logger } from "@utils/logger";
 
@@ -22,7 +23,7 @@ export async function createContainer(): Promise<Container> {
   // Config
   container.bind<IConfig>("config").toConstantValue(config);
 
-  container.bind<KeycloakAdminClient>(KeycloakAdminClient).toConstantValue(await kcClientFactory(config));
+  // container.bind<KeycloakAdminClient>(KeycloakAdminClient).toConstantValue(await kcClientFactory(config));
   container.bind<BaseClient>("openid").toConstantValue(await openIdClientFactory(config));
   container.bind<string>("kcPublicKey").toConstantValue(await publicKeyFactory(config));
 
@@ -38,6 +39,7 @@ export async function createContainer(): Promise<Container> {
   container.bind<ParseManager>(ParseManager).toSelf();
   container.bind<BulkManager>(BulkManager).toSelf();
   container.bind<ProductsManager>(ProductsManager).toSelf();
+  container.bind<CategoriesManager>(CategoriesManager).toSelf();
 
   // Controllers
   container.bind<HealthController>(HealthController).toSelf();

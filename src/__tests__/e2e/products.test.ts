@@ -8,13 +8,20 @@ import { SqlBaseRepository } from "@repositories/sql-base.repository";
 import FormData from "form-data";
 import { readFileSync } from "fs";
 import { resolve } from "path";
+import { ProductsManager } from "@managers/products.manager";
+import { ProductsRepository } from "@repositories/products.repository";
+import { ProductCalculator } from "@utils/product.utils";
 
 describe("Products E2E test", () => {
   jest.setTimeout(300000);
   let server: Server;
   let client: AxiosInstance;
   let baseRepository: SqlBaseRepository;
-  let productsToDelete = [99999901, 99999902, 99999903];
+
+  const deleteProducts = async () => {
+    return await baseRepository.executeQuery<any>(`DELETE FROM PRODUCTS`);
+  };
+
   beforeAll(async () => {
     const serverInfo = await serverBuilder();
     server = serverInfo.server;
@@ -25,8 +32,8 @@ describe("Products E2E test", () => {
   });
 
   afterAll(async () => {
-    await server.close();
-    await baseRepository.executeQuery<any>(`DELETE FROM PRODUCTS WHERE Code in (${productsToDelete.join()})`);
+    server.close();
+    await deleteProducts();
   });
 
   describe("Test List products: GET: /products", () => {
@@ -56,6 +63,7 @@ describe("Products E2E test", () => {
   describe("Test MDB upload", () => {
     it("Should insert all file's products into the DB", async () => {
       // Arrange
+      await deleteProducts();
       const expectedResult = [
         {
           // Id: expect.anything(),
@@ -126,7 +134,7 @@ describe("Products E2E test", () => {
       expect(res.status).toBe(204);
     });
 
-    it.only.each([
+    it.each([
       [
         "update and insert",
         [
@@ -135,88 +143,96 @@ describe("Products E2E test", () => {
             Description: "Producto Updated 1",
             Code: "99999901",
             CodeString: "99.99.99.01",
-            // Utility: expect.anything(),
-            // ListPrice: expect.anything(),
-            // Vat: expect.anything(),
-            // Dolar: expect.anything(),
-            // Transport: expect.anything(),
+            Utility: 0.3,
+            ListPrice: 56.19,
+            Vat: 0.21,
+            Dolar: 6.42,
+            Transport: 0.14,
             // CategoryId: expect.anything(),
-            // Card: expect.anything(),
-            // Cost: expect.anything(),
-            // Price: expect.anything(),
-            // CardPrice: expect.anything(),
+            Card: 0.23,
+            Cost: 38.51,
+            Price: 101,
+            CardPrice: ProductCalculator.cardPrice(101, 0.23),
           },
           {
             // Id: expect.anything(),
             Description: "Producto Updated 2",
             Code: "99999902",
             CodeString: "99.99.99.02",
-            // Utility: expect.anything(),
-            // ListPrice: expect.anything(),
-            // Vat: expect.anything(),
-            // Dolar: expect.anything(),
-            // Transport: expect.anything(),
+            Utility: 0.3,
+            ListPrice: 56.19,
+            Vat: 0.21,
+            Dolar: 6.42,
+            Transport: 0.14,
             // CategoryId: expect.anything(),
-            // Card: expect.anything(),
-            // Cost: expect.anything(),
-            // Price: expect.anything(),
-            // CardPrice: expect.anything(),
+            Card: 0.23,
+            Cost: 38.51,
+            Price: 202,
+            CardPrice: ProductCalculator.cardPrice(202, 0.23),
           },
           {
             // Id: expect.anything(),
             Description: "Producto Updated 3",
             Code: "99999903",
             CodeString: "99.99.99.03",
-            // Utility: expect.anything(),
-            // ListPrice: expect.anything(),
-            // Vat: expect.anything(),
-            // Dolar: expect.anything(),
-            // Transport: expect.anything(),
+            Utility: 0.3,
+            ListPrice: 56.19,
+            Vat: 0.21,
+            Dolar: 6.42,
+            Transport: 0.14,
             // CategoryId: expect.anything(),
-            // Card: expect.anything(),
-            // Cost: expect.anything(),
-            // Price: expect.anything(),
-            // CardPrice: expect.anything(),
+            Card: 0.23,
+            Cost: 38.51,
+            Price: 303,
+            CardPrice: ProductCalculator.cardPrice(303, 0.23),
           },
           {
             // Id: expect.anything(),
             Description: "Producto 4",
-            Code: "99999903",
-            CodeString: "99.99.99.03",
-            // Utility: expect.anything(),
-            // ListPrice: expect.anything(),
-            // Vat: expect.anything(),
-            // Dolar: expect.anything(),
-            // Transport: expect.anything(),
+            Code: "99999904",
+            CodeString: "99.99.99.04",
+            Utility: 0.3,
+            ListPrice: 56.19,
+            Vat: 0.21,
+            Dolar: 6.42,
+            Transport: 0.14,
             // CategoryId: expect.anything(),
-            // Card: expect.anything(),
-            // Cost: expect.anything(),
-            // Price: expect.anything(),
-            // CardPrice: expect.anything(),
+            Card: 0.23,
+            Cost: 38.51,
+            Price: 400,
+            CardPrice: ProductCalculator.cardPrice(400, 0.23),
           },
         ],
         "upsert.mdb",
       ],
     ])("Should %p all file's products into the DB", async (_msg, expectedResult, fileName) => {
       // Arrange
-      const codes = expectedResult.map((p) => p.Code);
+      await deleteProducts();
+      await baseRepository.executeQuery<any>(
+        `INSERT INTO PRODUCTS (Code, CodeString, Description) VALUES (${expectedResult[0].Code}, '${expectedResult[0].CodeString}', 'Exitent Product')`
+      );
+      const insertManySpy = jest.spyOn(ProductsRepository.prototype, "insertMany");
+      const updateManyByCodeSpy = jest.spyOn(ProductsRepository.prototype, "updateManyByCode");
+      // Act
       const form = new FormData();
       const file = readFileSync(resolve("src", "__tests__", "data", fileName));
       form.append("file", file);
-      // Act
       const res = await client.post("/products/mdb", form, {
         headers: {
           ...form.getHeaders(),
         },
       });
       // Assert
-      await sleep(3000);
-      const dbRes = await baseRepository.executeQuery<any>(`SELECT * FROM PRODUCTS WHERE Code in (${codes})`);
-      expect(dbRes.length).toEqual(expectedResult.length)
+      await sleep(5000);
+      // const codes = expectedResult.map((p) => p.Code);
+      const dbRes = await baseRepository.executeQuery<any>(`SELECT * FROM PRODUCTS ORDER BY CODE`);
+      expect(dbRes.length).toEqual(expectedResult.length);
       expectedResult.forEach((item, index) => {
         expect(dbRes[index]).toEqual(expect.objectContaining(item));
       });
       expect(res.status).toBe(204);
+      expect(insertManySpy).toHaveBeenCalled();
+      expect(updateManyByCodeSpy).toHaveBeenCalled();
     });
   });
 });

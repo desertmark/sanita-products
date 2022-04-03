@@ -5,7 +5,10 @@
       "command": "npm test",
       "name": "Tests",
       "request": "launch",
-      "type": "node-terminal"
+      "type": "node-terminal",
+      "env": {
+        "DB_DATABASE": "sanita_e2e_test",
+      }
     },
     {
       "command": "npm start",

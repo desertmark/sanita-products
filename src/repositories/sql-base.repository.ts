@@ -60,9 +60,12 @@ export class SqlBaseRepository {
 
   async createDb() {
     const connection = await this.connect('master');
-    const req = new Request(`CREATE DATABASE ${this.config.db.name}`, (error) => {
+    const req = new Request(`
+    IF NOT EXISTS (SELECT * FROM SYSDATABASES  WHERE NAME = '${this.config.db.name}')
+      CREATE DATABASE ${this.config.db.name};
+    `, (error) => {
       if (error) {
-        this.logger.error('Failed to create db', this.config.db);
+        this.logger.error('Failed to create db', {config: this.config.db, error});
       }
     });
     await connection.execSql(req);
