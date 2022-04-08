@@ -1,3 +1,4 @@
+import { Database, SqlTableDefinition } from "@models/database.model";
 import { camelCase, update } from "lodash";
 
 export class CommonUtils {
@@ -107,5 +108,20 @@ export class SqlHelper {
       default:
         return value;
     }
+  }
+
+  /**
+   * It will use the Database table definition column names and parsers to parse the recovered record from the database into an typescript entity
+   * with camelCase keys.
+   * @param dbRecord raw object recovered from sql query
+   * @param tableName table name of the recovered object is coming from.
+   */
+  static toAppEntity<T extends Record<string, any>>(dbRecord: Record<string, string | number>, tableName: string): T {
+    const entity = {};
+    const table = Database.Schema.Tables.find((t) => t.name === tableName);
+    table.cols.forEach((col) => {
+      entity[col.name] = col?.parser ? col.parser(dbRecord[col.name]) : dbRecord[col.name];
+    });
+    return CommonUtils.toCamelCaseRecord(entity);
   }
 }

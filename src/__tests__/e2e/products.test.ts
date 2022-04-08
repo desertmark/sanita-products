@@ -19,7 +19,8 @@ describe("Products E2E test", () => {
   let baseRepository: SqlBaseRepository;
 
   const deleteProducts = async () => {
-    return await baseRepository.executeQuery<any>(`DELETE FROM PRODUCTS`);
+    await baseRepository.executeQuery<any>(`DELETE FROM DISCOUNTS`);
+    await baseRepository.executeQuery<any>(`DELETE FROM PRODUCTS`);
   };
 
   beforeAll(async () => {

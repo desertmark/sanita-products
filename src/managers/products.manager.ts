@@ -10,14 +10,31 @@ export class ProductsManager {
   constructor(
     @inject(ProductsRepository) private products: ProductsRepository,
     @inject(BulkManager) private bulkManager: BulkManager,
-    @inject(Logger) private logger: Logger,
+    @inject(Logger) private logger: Logger
   ) {}
 
   async insertMany(products: Omit<IProduct, "id">[]) {
-    await this.bulkManager.processByChunk(products, this.products.insertMany.bind(this.products), {
-      operationName: "products-manager.insertMany",
-      chunkSize: 2000,
-    });
+    await this.bulkManager.processByChunk(
+      products,
+      async (products: Omit<IProduct, "id">[]) => {
+        // Insert products
+        await this.products.insertMany(products);
+        // Read inserted products to get IDs
+        const codes = products.map((p) => p.code.toString());
+        const insertedProducts = await this.products.listByCode(codes);
+        // Join IDs and discounts.
+        insertedProducts.forEach((insertedProduct) => {
+          const productWithDiscounts = products.find((p) => p.code === insertedProduct.code);
+          insertedProduct.discounts = productWithDiscounts?.discounts;
+        });
+        // Insert discounts.
+        await this.products.insertManyDiscounts(insertedProducts);
+      },
+      {
+        operationName: "products-manager.insertMany",
+        chunkSize: 2000,
+      }
+    );
   }
 
   async updateManyByCode(products: Omit<IProduct, "id">[]) {

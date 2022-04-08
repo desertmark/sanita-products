@@ -17,11 +17,11 @@ export interface SqlQueryOptions {
 
 @injectable()
 export class SqlBaseRepository {
-  constructor(@inject("config") private config: IConfig, @inject(Logger) private logger: Logger) { }
+  constructor(@inject("config") private config: IConfig, @inject(Logger) private logger: Logger) {}
 
   async init(): Promise<void> {
     if (this.config.db.generateSchema) {
-      await this.createDb()
+      await this.createDb();
       await this.createSchema(this.config.db.generateSchemaForce);
     }
   }
@@ -59,15 +59,18 @@ export class SqlBaseRepository {
   }
 
   async createDb() {
-    const connection = await this.connect('master');
-    const req = new Request(`
+    const connection = await this.connect("master");
+    const req = new Request(
+      `
     IF NOT EXISTS (SELECT * FROM SYSDATABASES  WHERE NAME = '${this.config.db.name}')
       CREATE DATABASE ${this.config.db.name};
-    `, (error) => {
-      if (error) {
-        this.logger.error('Failed to create db', {config: this.config.db, error});
+    `,
+      (error) => {
+        if (error) {
+          this.logger.error("Failed to create db", { config: this.config.db, error });
+        }
       }
-    });
+    );
     await connection.execSql(req);
     this.closeConnection(req, connection);
   }
@@ -102,10 +105,10 @@ export class SqlBaseRepository {
       IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='${name}' and xtype='U')
         CREATE TABLE ${name} (
           ${cols
-        .map(
-          (col) => `${col.name} ${col.type} ${col.notNull ? "NOT NULL" : ""} ${col.identity ? "IDENTITY(1,1)" : ""}`
-        )
-        .join(",\n\t")},
+            .map(
+              (col) => `${col.name} ${col.type} ${col.notNull ? "NOT NULL" : ""} ${col.identity ? "IDENTITY(1,1)" : ""}`
+            )
+            .join(",\n\t")},
           ${pks?.length ? `CONSTRAINT PK_${name} PRIMARY KEY(${pks}),` : ""}
           ${fks.join()}
         );
@@ -137,13 +140,17 @@ export class SqlBaseRepository {
     const sql = `
       SELECT COUNT(*) AS count FROM [${tableName}]
     `;
-    const res = await this.executeQuery<{count: number}>(sql);
+    const res = await this.executeQuery<{ count: number }>(sql);
     return res[0].count;
   }
 
   // async existBy(tableName: string, field)
 
-  async executeQuery<T>(sql: string, params?: SqlParameter[], options?: SqlQueryOptions): Promise<T[]> {
+  async executeQuery<T extends Record<string, any>>(
+    sql: string,
+    params?: SqlParameter[],
+    options?: SqlQueryOptions
+  ): Promise<T[]> {
     const connection = await this.connect();
     return new Promise((res, rej) => {
       var req = new Request(sql, (error, rowCount, rows) => {

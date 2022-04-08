@@ -13,7 +13,9 @@ import { camelCase, pick } from "lodash";
 import sumBy from "lodash/sumBy";
 import { CommonUtils } from "./common.utils";
 import { Database } from "@models/database.model";
+
 export class ProductMapper {
+
   static toProductList(productJsonList: IProductJSON[], categories: ICategory[]): Omit<IProduct, "id">[] {
     const products = productJsonList.map((json) => {
       const category = categories.find((cat) => cat.description === json.categoryDescription);

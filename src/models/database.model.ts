@@ -1,4 +1,8 @@
 import { TYPES } from "tedious";
+export interface SqlTableDefinition {
+  name: string;
+  cols: SqlColDefinition[];
+}
 export interface SqlColDefinition {
   name: string;
   type: string;
@@ -9,6 +13,7 @@ export interface SqlColDefinition {
     foreignTable: string;
     foreignCol: string;
   };
+  parser?: Function;
 }
 
 const Int = TYPES.Int.name;
@@ -19,6 +24,7 @@ export class Database {
   public static readonly Tables = {
     Products: "Products",
     Categories: "Categories",
+    Discounts: "Discounts",
   };
 
   public static Schema = {
@@ -35,7 +41,7 @@ export class Database {
         cols: [
           { name: "Id", type: Int, identity: true, notNull: true, pk: true },
           { name: "Description", type: String },
-          { name: "Code", type: BigInt.name },
+          { name: "Code", type: BigInt.name, parser: parseInt },
           { name: "CodeString", type: String },
           { name: "Utility", type: Decimal },
           { name: "ListPrice", type: Money },
@@ -47,8 +53,18 @@ export class Database {
           { name: "Cost", type: Decimal },
           { name: "Price", type: Decimal },
           { name: "CardPrice", type: Money },
-        ] as SqlColDefinition[],
+        ],
       },
-    ],
+      {
+        name: Database.Tables.Discounts,
+        cols: [
+          { name: "ProductId", type: Int, fk: { foreignCol: "Id", foreignTable: Database.Tables.Products }, pk: true },
+          { name: "Number", type: Int, pk: true },
+          { name: "Type", type: String, notNull: true },
+          { name: "Description", type: String },
+          { name: "Amount", type: Decimal, notNull: true },
+        ],
+      },
+    ] as SqlTableDefinition[],
   };
 }

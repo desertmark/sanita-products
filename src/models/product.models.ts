@@ -100,6 +100,6 @@ export type IDbProduct = Omit<IProduct, "discounts" | "id">;
 export type IDbUpdateProduct = Pick<IProduct, "listPrice" | "code">;
 
 export interface ProductResponse {
-  items: Omit<IProduct, 'discount'>[];
+  items: Omit<IProduct, "discount">[];
   total: number;
 }
