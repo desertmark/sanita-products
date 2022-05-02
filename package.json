@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "ts-node ./src/main.ts",
-    "test": "DB_DATABASE=sanita_e2e_test jest",
+    "test": "DB_DATABASE=sanita_e2e_test jest --runInBand",
     "dist": "node ./dist/main.js",
     "docker:build": "docker-compose build --progress plain",
     "docker:start": "docker-compose up"

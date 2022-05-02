@@ -53,7 +53,10 @@ services:
       - ./imports:/opt/jboss/keycloak/imports
     ports:
       - 8080:8080
-
+  parse-service:
+    image: desertmark/parse-service:0.0.3
+    ports:
+     - "7000:80"
   mssql:
     #docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=yourStrong(!)Password" -p 1433:1433 -d mcr.microsoft.com/mssql/server:2019-CU15-ubuntu-20.04
     image: mcr.microsoft.com/mssql/server:2019-CU15-ubuntu-20.04

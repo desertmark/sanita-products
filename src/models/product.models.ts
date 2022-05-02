@@ -110,7 +110,11 @@ export type IDbProduct = Omit<IProduct, "discounts">;
  * Db Product that is not yet inserted to the database thus, the lack of id and discounts.
  */
 export type IDbInsertProduct = Omit<IDbProduct, "id">;
-export type IDbUpdateProduct = Pick<IProduct, "listPrice" | "code">;
+
+/**
+ * Represents a bulk update entity for products builded from the guidoli xls file.
+ */
+export type IDbUpdateProduct = Pick<IProduct, "listPrice" | "code" | "bonus" | "bonus2">;
 
 /**
  * Product app entity to insert, thus the lack of id.

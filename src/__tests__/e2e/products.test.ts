@@ -2,83 +2,54 @@ require("module-alias/register");
 import "reflect-metadata";
 import axios, { AxiosInstance } from "axios";
 import { Server } from "http";
-import { serverBuilder } from "../../config/server";
+import { Sanita, serverBuilder } from "../../config/server";
 import { DiscountType, IDbInsertProduct, IDiscount, IProduct, ProductResponse } from "../../models/product.models";
 import { SqlBaseRepository } from "@repositories/sql-base.repository";
 import FormData from "form-data";
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { ProductsManager } from "@managers/products.manager";
 import { ProductsRepository } from "@repositories/products.repository";
 import { ProductCalculator } from "@utils/product.utils";
-import { SqlHelper } from "@utils/common.utils";
+import { CommonUtils, SqlHelper } from "@utils/common.utils";
 import { Database } from "@models/database.model";
-import { v4 as uuidv4 } from "uuid";
-function productFactory(): IDbInsertProduct {
-  return {
-    code: 1,
-    codeString: "00.00.00.01",
-    description: `Test-description-${uuidv4()}`,
-    utility: 0.21,
-    listPrice: 0.21,
-    vat: 0.21,
-    dolar: 0.21,
-    transport: 0.21,
-    categoryId: 1,
-    card: 0.21,
-    cost: 0.21,
-    price: 0.21,
-    cardPrice: 0.21,
-    // Temp fields until discounts array can be used.
-    bonus: 0.21,
-    bonus2: 0.21,
-    cashDiscount: 0.21,
-    cashDiscount2: 0.21,
-  };
-}
+import { deleteProducts, postFile, productFactory } from "../../utils/test.utils";
+let client: AxiosInstance;
 
 describe("Products E2E test", () => {
   jest.setTimeout(300000);
-  let server: Server;
-  let client: AxiosInstance;
   let baseRepository: SqlBaseRepository;
-
-  const deleteProducts = async () => {
-    await baseRepository.executeQuery<any>(`DELETE FROM DISCOUNTS`);
-    await baseRepository.executeQuery<any>(`DELETE FROM PRODUCTS`);
-  };
-
+  let sanita: Sanita;
   beforeAll(async () => {
-    const serverInfo = await serverBuilder();
-    server = serverInfo.server;
-    baseRepository = serverInfo.container.get(SqlBaseRepository);
+    sanita = await serverBuilder();
+    baseRepository = sanita.container.get(SqlBaseRepository);
     client = axios.create({
       baseURL: "http://localhost:3001",
     });
+    await deleteProducts(baseRepository);
   });
 
   afterAll(async () => {
-    server.close();
-    await deleteProducts();
+    await sanita.stop();
   });
+
+  afterEach(async () => await deleteProducts(baseRepository));
 
   describe("Test List products: GET: /products", () => {
     it("Should return the list of products", async () => {
       // Arrange
-      await deleteProducts();
       const products = [productFactory(), productFactory()];
       const discountLists: IDiscount[][] = [
         [
-          { amount: 0.21, description: "Bonificacion", number: 1, type: DiscountType.bonus },
-          { amount: 0.21, description: "Bonificacion 2", number: 2, type: DiscountType.bonus },
-          { amount: 0.21, description: "Descuento de caja", number: 1, type: DiscountType.cash },
-          { amount: 0.21, description: "Descuento de caja 2", number: 2, type: DiscountType.cash },
+          { amount: products[0].bonus, description: "Bonificacion", number: 1, type: DiscountType.bonus },
+          { amount: products[0].bonus2, description: "Bonificacion 2", number: 2, type: DiscountType.bonus },
+          { amount: products[0].cashDiscount, description: "Descuento de caja", number: 1, type: DiscountType.cash },
+          { amount: products[0].cashDiscount2, description: "Descuento de caja 2", number: 2, type: DiscountType.cash },
         ],
         [
-          { amount: 0.21, description: "Bonificacion", number: 1, type: DiscountType.bonus },
-          { amount: 0.21, description: "Bonificacion 2", number: 2, type: DiscountType.bonus },
-          { amount: 0.21, description: "Descuento de caja", number: 1, type: DiscountType.cash },
-          { amount: 0.21, description: "Descuento de caja 2", number: 2, type: DiscountType.cash },
+          { amount: products[1].bonus, description: "Bonificacion", number: 1, type: DiscountType.bonus },
+          { amount: products[1].bonus2, description: "Bonificacion 2", number: 2, type: DiscountType.bonus },
+          { amount: products[1].cashDiscount, description: "Descuento de caja", number: 1, type: DiscountType.cash },
+          { amount: products[1].cashDiscount2, description: "Descuento de caja 2", number: 2, type: DiscountType.cash },
         ],
       ];
       await baseRepository.executeQuery(SqlHelper.insertTemplate(Database.Tables.Products, products[0]));
@@ -96,13 +67,13 @@ describe("Products E2E test", () => {
         expect(item.discounts).toEqual(expect.arrayContaining(discountLists[i]));
       });
       expect(res.status).toBe(200);
+      expect(res.data.total).toBe(2);
     });
   });
 
   describe("Test MDB upload", () => {
     it("Should insert all file's products into the DB", async () => {
       // Arrange
-      await deleteProducts();
       const expectedResult = [
         {
           // Id: expect.anything(),
@@ -246,7 +217,6 @@ describe("Products E2E test", () => {
       ],
     ])("Should %p all file's products into the DB", async (_msg, expectedResult, fileName) => {
       // Arrange
-      await deleteProducts();
       await baseRepository.executeQuery<any>(
         `INSERT INTO PRODUCTS (Code, CodeString, Description) VALUES (${expectedResult[0].Code}, '${expectedResult[0].CodeString}', 'Exitent Product')`
       );

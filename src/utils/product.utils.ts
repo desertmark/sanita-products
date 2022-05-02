@@ -98,14 +98,16 @@ export class ProductMapper {
 
   static toDbUpdateProduct(guidoliProduct: IGuidoliProduct): IDbUpdateProduct {
     const values = Object.values(guidoliProduct);
+    let bonus = parseFloat(values[3]);
+    let bonus2 = parseFloat(values[4]);
+    bonus = (bonus || 0) / 100;
+    bonus2 = (bonus2 || 0) / 100;
     return {
       code: parseInt(values[0].replace(/[.]/g, "")),
       listPrice: parseFloat(values[2]),
+      bonus,
+      bonus2,
     };
-    // bonificacion = parseFloat(values[3]);
-    //   bonificacion2 = parseFloat(values[4]);
-    //   bonificacion = (this.bonificacion || 0) / 100;
-    //   bonificacion2 = (this.bonificacion2 || 0) / 100;
   }
 
   static fromDbToProduct(dbProduct: IDbProduct): IProduct {

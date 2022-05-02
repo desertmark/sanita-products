@@ -6,7 +6,7 @@ const config: Config.InitialOptions = {
   verbose: true,
   preset: 'ts-jest',
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/src/' }),
-//   testMatch: ["src/__tests__/*.test.ts"]
+  // testMatch: ["__tests__/e2e/*.test.ts"]
 };
 export default config;
 
