@@ -20,9 +20,11 @@ const {
   DB_GENERATE_SCHEMA_FORCE,
   PARSE_SERVICE_URL,
   NODE_TLS_REJECT_UNAUTHORIZED,
+  USE_DISCOUNTS_TABLE,
 } = process.env;
 
 export abstract class IConfig {
+  useDiscountsTable: boolean;
   db: {
     host: string;
     port: number;
@@ -49,6 +51,7 @@ export abstract class IConfig {
 }
 
 export const config: IConfig = {
+  useDiscountsTable: USE_DISCOUNTS_TABLE === "true",
   db: {
     host: DB_ADDR || "localhost",
     port: parseInt(DB_PORT) || 1433,

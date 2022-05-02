@@ -1,4 +1,5 @@
-import { IGuidoliProduct, IProduct } from "@models/product.models";
+import { IConfig } from "@config/config";
+import { IDbInsertProduct, IGuidoliProduct, IInsertProduct, IProduct } from "@models/product.models";
 import { ProductsRepository } from "@repositories/products.repository";
 import { Logger } from "@utils/logger";
 import { ProductMapper } from "@utils/product.utils";
@@ -10,8 +11,19 @@ export class ProductsManager {
   constructor(
     @inject(ProductsRepository) private products: ProductsRepository,
     @inject(BulkManager) private bulkManager: BulkManager,
-    @inject(Logger) private logger: Logger
+    @inject(Logger) private logger: Logger,
+    @inject("config") private config: IConfig
   ) {}
+
+  async list(): Promise<IProduct[]> {
+    const products = await this.products.list();
+    return products.map(ProductMapper.fromDbToProduct);
+  }
+
+  async listByCode(codes: string[]): Promise<IProduct[]> {
+    const products = await this.products.listByCode(codes);
+    return products.map(ProductMapper.fromDbToProduct);
+  }
 
   async insertMany(products: Omit<IProduct, "id">[]) {
     await this.bulkManager.processByChunk(
@@ -19,16 +31,10 @@ export class ProductsManager {
       async (products: Omit<IProduct, "id">[]) => {
         // Insert products
         await this.products.insertMany(products);
-        // Read inserted products to get IDs
-        const codes = products.map((p) => p.code.toString());
-        const insertedProducts = await this.products.listByCode(codes);
-        // Join IDs and discounts.
-        insertedProducts.forEach((insertedProduct) => {
-          const productWithDiscounts = products.find((p) => p.code === insertedProduct.code);
-          insertedProduct.discounts = productWithDiscounts?.discounts;
-        });
-        // Insert discounts.
-        await this.products.insertManyDiscounts(insertedProducts);
+        // Usage of discounts table is not completed, flag disabled until it does.
+        if (this.config.useDiscountsTable) {
+          await this.insertDiscounts(products);
+        }
       },
       {
         operationName: "products-manager.insertMany",
@@ -69,5 +75,23 @@ export class ProductsManager {
       operationName: "products-manager.updateManyFromGuidoliProducts",
       chunkSize: 1000,
     });
+  }
+
+  /**
+   * It will persist the products discounts into the discounts table
+   * @param insertedProducts products with set id.
+   * @param products products with discounts.
+   */
+  private async insertDiscounts(products: IInsertProduct[]) {
+    // Read inserted products to get IDs
+    const codes = products.map((p) => p.code.toString());
+    const insertedProducts = await this.listByCode(codes);
+    // Join IDs and discounts.
+    insertedProducts.forEach((insertedProduct) => {
+      const productWithDiscounts = products.find((p) => p.code === insertedProduct.code);
+      insertedProduct.discounts = productWithDiscounts?.discounts;
+    });
+    // Insert discounts.
+    await this.products.insertManyDiscounts(insertedProducts);
   }
 }

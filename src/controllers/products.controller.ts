@@ -5,7 +5,7 @@ import { Response } from "express";
 import { Request } from "tedious";
 import { IFile, ParseManager } from "@managers/parse.manager";
 import { CategoriesRepository } from "@repositories/categories.repository";
-import { GuidoliProduct, IGuidoliProduct, IProducto } from "@models/product.models";
+import { IGuidoliProduct, IProducto } from "@models/product.models";
 import { CategoryMapper } from "@utils/category.utils";
 import { ProductMapper } from "@utils/product.utils";
 import { ProductsManager } from "@managers/products.manager";
@@ -27,7 +27,7 @@ export class ProductsController {
   async list(): Promise<any> {
     try {
       const total = await this.products.count();
-      const items = await this.products.list();
+      const items = await this.productManager.list();
       return {
         total,
         items,

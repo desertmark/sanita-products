@@ -25,11 +25,17 @@ export interface IProduct {
   cost: number;
   price: number;
   cardPrice: number;
+  // Temp fields until discounts array can be used.
+  bonus: number;
+  bonus2: number;
+  cashDiscount: number;
+  cashDiscount2: number;
 }
 
 export interface IProducto {
   precio: number;
   bonif: number;
+  bonif2: number;
   caja1: number;
   caja2: number;
   costo: number;
@@ -41,7 +47,6 @@ export interface IProducto {
   codigo: string;
   descripcion: string;
   rubro: string;
-  bonif2: number;
   tarjeta: number;
 }
 
@@ -96,8 +101,21 @@ export class GuidoliProduct {
   }
 }
 
-export type IDbProduct = Omit<IProduct, "discounts" | "id">;
+/**
+ * Database Product Record after it was parsed.
+ */
+export type IDbProduct = Omit<IProduct, "discounts">;
+
+/**
+ * Db Product that is not yet inserted to the database thus, the lack of id and discounts.
+ */
+export type IDbInsertProduct = Omit<IDbProduct, "id">;
 export type IDbUpdateProduct = Pick<IProduct, "listPrice" | "code">;
+
+/**
+ * Product app entity to insert, thus the lack of id.
+ */
+export type IInsertProduct = Omit<IProduct, "id">;
 
 export interface ProductResponse {
   items: Omit<IProduct, "discount">[];

@@ -1,5 +1,5 @@
 import { Database } from "@models/database.model";
-import { IDiscount, IProduct } from "@models/product.models";
+import { IDbInsertProduct, IDiscount, IProduct, IDbProduct } from "@models/product.models";
 import { CommonUtils, SqlHelper } from "@utils/common.utils";
 import { ProductMapper } from "@utils/product.utils";
 import { inject, injectable } from "inversify";
@@ -19,12 +19,12 @@ export class ProductsRepository {
     return await this.baseRepository.findById(productId, Database.Tables.Products);
   }
 
-  async list(): Promise<IProduct[]> {
-    const products = await this.baseRepository.list<IProduct>(Database.Tables.Products);
-    return products.map((prod) => CommonUtils.toCamelCaseRecord(prod));
+  async list(): Promise<IDbProduct[]> {
+    const products = await this.baseRepository.list<IDbProduct>(Database.Tables.Products);
+    return products.map((prod) => SqlHelper.toAppEntity(prod, Database.Tables.Products));
   }
 
-  async listByCode(codes: string[]): Promise<IProduct[]> {
+  async listByCode(codes: string[]): Promise<IDbProduct[]> {
     const sql = `
       SELECT * FROM ${Database.Tables.Products}
       WHERE Code IN (${codes})
@@ -70,9 +70,13 @@ export class ProductsRepository {
    * Given a list of products with discounts it will insert all the discounts of every product.
    */
   async insertManyDiscounts(products: IProduct[]) {
-    const sql = products.map((prod) =>
-      prod.discounts.map((disc) => SqlHelper.insertTemplate(Database.Tables.Discounts, { productId: prod.id, ...disc })).join('')
-    ).join('');
+    const sql = products
+      .map((prod) =>
+        prod.discounts
+          .map((disc) => SqlHelper.insertTemplate(Database.Tables.Discounts, { productId: prod.id, ...disc }))
+          .join("")
+      )
+      .join("");
     await this.baseRepository.executeQuery(sql);
   }
 }

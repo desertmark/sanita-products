@@ -1,13 +1,14 @@
 import { ICategory } from "@models/category.models";
 import {
   DiscountType,
-  IDbProduct,
+  IDbInsertProduct,
   IDbUpdateProduct,
   IDiscount,
   IGuidoliProduct,
   IProduct,
   IProductJSON,
   IProducto,
+  IDbProduct,
 } from "@models/product.models";
 import { camelCase, pick } from "lodash";
 import sumBy from "lodash/sumBy";
@@ -15,7 +16,6 @@ import { CommonUtils } from "./common.utils";
 import { Database } from "@models/database.model";
 
 export class ProductMapper {
-
   static toProductList(productJsonList: IProductJSON[], categories: ICategory[]): Omit<IProduct, "id">[] {
     const products = productJsonList.map((json) => {
       const category = categories.find((cat) => cat.description === json.categoryDescription);
@@ -82,13 +82,18 @@ export class ProductMapper {
         },
       ],
       cardPrice: ProductCalculator.cardPrice(productJson.price, productJson.card / 100),
+      // Temporary until discount array can be used.
+      bonus: productJson.bonus / 100,
+      bonus2: productJson.bonus2 / 100,
+      cashDiscount: productJson.cashDiscount2 / 100,
+      cashDiscount2: productJson.cashDiscount2 / 100,
     };
   }
 
-  static toDbProduct(product: Omit<IProduct, "id">): IDbProduct {
+  static toDbProduct(product: Omit<IProduct, "id">): IDbInsertProduct {
     const productTable = Database.Schema.Tables.find((t) => t.name === Database.Tables.Products);
     const colNames = productTable.cols.map((col) => camelCase(col.name));
-    return pick(product, colNames) as IDbProduct;
+    return pick(product, colNames) as IDbInsertProduct;
   }
 
   static toDbUpdateProduct(guidoliProduct: IGuidoliProduct): IDbUpdateProduct {
@@ -101,6 +106,38 @@ export class ProductMapper {
     //   bonificacion2 = parseFloat(values[4]);
     //   bonificacion = (this.bonificacion || 0) / 100;
     //   bonificacion2 = (this.bonificacion2 || 0) / 100;
+  }
+
+  static fromDbToProduct(dbProduct: IDbProduct): IProduct {
+    return {
+      ...dbProduct,
+      discounts: [
+        {
+          number: 1,
+          type: DiscountType.bonus,
+          description: "Bonificacion",
+          amount: dbProduct.bonus,
+        },
+        {
+          number: 2,
+          type: DiscountType.bonus,
+          description: "Bonificacion 2",
+          amount: dbProduct.bonus,
+        },
+        {
+          number: 1,
+          type: DiscountType.cash,
+          description: "Descuento de caja",
+          amount: dbProduct.bonus,
+        },
+        {
+          number: 2,
+          type: DiscountType.cash,
+          description: "Descuento de caja 2",
+          amount: dbProduct.bonus,
+        },
+      ],
+    };
   }
 }
 

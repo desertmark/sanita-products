@@ -53,6 +53,11 @@ export class Database {
           { name: "Cost", type: Decimal },
           { name: "Price", type: Decimal },
           { name: "CardPrice", type: Money },
+          // Should be temporary fields until Discounts table can be used.
+          { name: "Bonus", type: Decimal },
+          { name: "Bonus2", type: Decimal },
+          { name: "CashDiscount", type: Decimal },
+          { name: "CashDiscount2", type: Decimal },
         ],
       },
       {
