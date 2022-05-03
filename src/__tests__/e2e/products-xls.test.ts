@@ -4,10 +4,11 @@ import { SqlBaseRepository } from "../../repositories/sql-base.repository";
 import { Sanita, serverBuilder } from "../../config/server";
 import { CommonUtils, SqlHelper } from "../../utils/common.utils";
 import { Database } from "../../models/database.model";
-import { deleteProducts, postFile, productFactory } from "../../utils/test.utils";
+import { deleteProducts, postFile, productFactory, sleep } from "../../utils/test.utils";
 import axios, { AxiosInstance } from "axios";
-import { config } from "../../config/config";
+import { config, IConfig } from "../../config/config";
 import { merge } from "lodash";
+import { AddressInfo } from "net";
 
 describe("Products XLS E2E", () => {
   jest.setTimeout(300000);
@@ -16,15 +17,27 @@ describe("Products XLS E2E", () => {
   let sanita: Sanita;
 
   beforeAll(async () => {
-    sanita = await serverBuilder(merge(config, { db: { name: "products_xls" } }));
+    const configOverrides = {
+      db: {
+        name: "products_xls",
+      },
+      server: {
+        // Use a random free port
+        port: 0,
+      },
+    };
+    sanita = await serverBuilder(merge(config, configOverrides));
     baseRepository = sanita.container.get(SqlBaseRepository);
     client = axios.create({
-      baseURL: "http://localhost:3001",
+      baseURL: `http://localhost:${sanita.port}`,
     });
     await deleteProducts(baseRepository);
   });
 
-  afterAll(async () => await sanita.stop());
+  afterAll(async () => {
+    await sanita.stop();
+    await deleteProducts(baseRepository);
+  });
 
   describe("Test XLS upload", () => {
     it("Should update DB with xls information", async () => {
@@ -44,7 +57,9 @@ describe("Products XLS E2E", () => {
       const response = await postFile(client, "/products/xls", "bulk-update.xls");
 
       // Assert
+      await sleep(3000);
       const res = await baseRepository.list(Database.Tables.Products);
+      console.log(res);
       products.forEach((product, i) => {
         keysToAssert.forEach((k) => {
           const dbProduct = CommonUtils.toCamelCaseRecord(res[i]);

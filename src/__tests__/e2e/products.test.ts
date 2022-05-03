@@ -12,8 +12,9 @@ import { ProductsRepository } from "@repositories/products.repository";
 import { ProductCalculator } from "@utils/product.utils";
 import { CommonUtils, SqlHelper } from "@utils/common.utils";
 import { Database } from "@models/database.model";
-import { deleteProducts, postFile, productFactory } from "../../utils/test.utils";
+import { deleteProducts, postFile, productFactory, sleep } from "../../utils/test.utils";
 import { config } from "@config/config";
+import { merge } from "lodash";
 let client: AxiosInstance;
 
 describe("Products E2E test", () => {
@@ -21,10 +22,16 @@ describe("Products E2E test", () => {
   let baseRepository: SqlBaseRepository;
   let sanita: Sanita;
   beforeAll(async () => {
-    sanita = await serverBuilder(config);
+    const configOverrides = {
+      server: {
+        // Use a random free port
+        port: 0,
+      },
+    };
+    sanita = await serverBuilder(merge(config, configOverrides));
     baseRepository = sanita.container.get(SqlBaseRepository);
     client = axios.create({
-      baseURL: "http://localhost:3001",
+      baseURL: `http://localhost:${sanita.port}`,
     });
     await deleteProducts(baseRepository);
   });
@@ -246,9 +253,3 @@ describe("Products E2E test", () => {
     });
   });
 });
-
-async function sleep(time: number): Promise<void> {
-  return new Promise((res) => {
-    setTimeout(() => res(), time);
-  });
-}

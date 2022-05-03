@@ -59,8 +59,8 @@ export class ProductsController {
   async xls(@request() req: RequestWithFile, @response() res: Response): Promise<any> {
     try {
       const json = await this.parseManager.xlsToJson<IGuidoliProduct[]>(req.files.file as IFile, 3);
-      this.productManager.updateManyFromGuidoliProducts(json);
       res.send(204);
+      await this.productManager.updateManyFromGuidoliProducts(json);
     } catch (error) {
       console.error("Failed to parse xls.", error);
     }

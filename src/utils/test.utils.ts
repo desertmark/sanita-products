@@ -48,3 +48,9 @@ export function productFactory(codeString = "00.00.00.01", overrides = {}): IDbI
     ...overrides,
   };
 }
+
+export async function sleep(time: number): Promise<void> {
+  return new Promise((res) => {
+    setTimeout(() => res(), time);
+  });
+}

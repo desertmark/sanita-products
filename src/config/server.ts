@@ -7,6 +7,7 @@ import cors from "cors";
 import { Server } from "http";
 import { Application } from "express";
 import { Container } from "inversify";
+import { AddressInfo } from "net";
 
 export async function serverBuilder(config: IConfig): Promise<Sanita> {
   const container = await createContainer(config);
@@ -28,6 +29,10 @@ export async function serverBuilder(config: IConfig): Promise<Sanita> {
 
 export class Sanita {
   constructor(public app: Application, public server: Server, public container: Container) {}
+
+  get port(): number {
+    return (this.server.address() as AddressInfo).port;
+  }
 
   stop(): Promise<void> {
     return new Promise((res, rej) => {
