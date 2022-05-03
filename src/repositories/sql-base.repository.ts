@@ -71,7 +71,7 @@ export class SqlBaseRepository {
         }
       }
     );
-    await connection.execSql(req);
+    connection.execSql(req);
     this.closeConnection(req, connection);
   }
 

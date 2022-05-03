@@ -8,8 +8,8 @@ import { Server } from "http";
 import { Application } from "express";
 import { Container } from "inversify";
 
-export async function serverBuilder(): Promise<Sanita> {
-  const container = await createContainer();
+export async function serverBuilder(config: IConfig): Promise<Sanita> {
+  const container = await createContainer(config);
   const {
     server: { host, port },
   } = container.get<IConfig>("config");

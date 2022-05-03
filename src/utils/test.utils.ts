@@ -35,7 +35,7 @@ export function productFactory(codeString = "00.00.00.01", overrides = {}): IDbI
     vat: 0.21,
     dolar: 0.21,
     transport: 0.21,
-    categoryId: 1,
+    // categoryId: 1,
     card: 0.21,
     cost: 0.21,
     price: 0.21,

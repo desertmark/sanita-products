@@ -1,6 +1,6 @@
 import { Container, injectable } from "inversify";
 import KeycloakAdminClient from "@keycloak/keycloak-admin-client";
-import { IConfig, config } from "./config";
+import { IConfig } from "./config";
 import { kcClientFactory, openIdClientFactory, publicKeyFactory } from "./keycloak";
 import { BaseClient } from "openid-client";
 import { HealthController } from "@controllers/health.controller";
@@ -16,7 +16,7 @@ import { CategoriesManager } from "@managers/categories.manager";
 import { BulkManager } from "@managers/bulk.manager";
 import { Logger } from "@utils/logger";
 
-export async function createContainer(): Promise<Container> {
+export async function createContainer(config: IConfig): Promise<Container> {
   const container = new Container();
   // Utils
   container.bind<Logger>(Logger).toSelf();

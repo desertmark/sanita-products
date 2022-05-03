@@ -13,6 +13,7 @@ import { ProductCalculator } from "@utils/product.utils";
 import { CommonUtils, SqlHelper } from "@utils/common.utils";
 import { Database } from "@models/database.model";
 import { deleteProducts, postFile, productFactory } from "../../utils/test.utils";
+import { config } from "@config/config";
 let client: AxiosInstance;
 
 describe("Products E2E test", () => {
@@ -20,7 +21,7 @@ describe("Products E2E test", () => {
   let baseRepository: SqlBaseRepository;
   let sanita: Sanita;
   beforeAll(async () => {
-    sanita = await serverBuilder();
+    sanita = await serverBuilder(config);
     baseRepository = sanita.container.get(SqlBaseRepository);
     client = axios.create({
       baseURL: "http://localhost:3001",

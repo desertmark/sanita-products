@@ -6,16 +6,17 @@ import { CommonUtils, SqlHelper } from "../../utils/common.utils";
 import { Database } from "../../models/database.model";
 import { deleteProducts, postFile, productFactory } from "../../utils/test.utils";
 import axios, { AxiosInstance } from "axios";
+import { config } from "../../config/config";
+import { merge } from "lodash";
 
 describe("Products XLS E2E", () => {
   jest.setTimeout(300000);
-  let server: Server;
   let baseRepository: SqlBaseRepository;
   let client: AxiosInstance;
   let sanita: Sanita;
 
   beforeAll(async () => {
-    sanita = await serverBuilder();
+    sanita = await serverBuilder(merge(config, { db: { name: "products_xls" } }));
     baseRepository = sanita.container.get(SqlBaseRepository);
     client = axios.create({
       baseURL: "http://localhost:3001",
