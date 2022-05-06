@@ -16,7 +16,7 @@ export class CategoriesRepository {
   }
 
   async list(): Promise<ICategory[]> {
-    const categories = await this.baseRepository.list<ICategory>(Database.Tables.Categories);
+    const categories = await this.baseRepository.list<ICategory>(Database.Tables.Categories, {offset: 0, size: 99999999999999999});
     return categories.map((cat) => CommonUtils.toCamelCaseRecord(cat));
   }
 }

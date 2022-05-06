@@ -1,5 +1,6 @@
 import { Database, SqlTableDefinition } from "@models/database.model";
 import { camelCase, update } from "lodash";
+import { queryParam as inversifyQueryParamDecorator } from 'inversify-express-utils';
 
 export class CommonUtils {
   static capitalize(str: string) {

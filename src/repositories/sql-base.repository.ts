@@ -14,6 +14,12 @@ export interface SqlParameter {
 export interface SqlQueryOptions {
   timeout?: number;
 }
+export interface SqlListOptions {
+  fields?: string[];
+  orderBy?: string;
+  size?: number;
+  offset?: number;
+}
 
 @injectable()
 export class SqlBaseRepository {
@@ -127,7 +133,8 @@ export class SqlBaseRepository {
     ]);
   }
 
-  async list<T>(tableName: string, fields?: string[], orderBy = "Id", size = 100, offset = 0): Promise<T[]> {
+  async list<T>(tableName: string, options: SqlListOptions = { orderBy: "Id", offset: 0, size: 100 }): Promise<T[]> {
+    const { fields, offset, orderBy, size } = { orderBy: "Id", offset: 0, size: 100, ...options };
     const sql = `
       SELECT ${fields || "*"} FROM [${tableName}]
       ORDER BY ${orderBy}

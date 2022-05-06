@@ -1,11 +1,10 @@
 import { Database } from "@models/database.model";
-import { IDbInsertProduct, IDiscount, IProduct, IDbProduct } from "@models/product.models";
-import { CommonUtils, SqlHelper } from "@utils/common.utils";
+import { IDiscount, IProduct, IDbProduct } from "@models/product.models";
+import { SqlHelper } from "@utils/common.utils";
 import { ProductMapper } from "@utils/product.utils";
 import { inject, injectable } from "inversify";
 import { SqlBaseRepository } from "./sql-base.repository";
 import fs from "fs";
-import { orderBy } from "lodash";
 // const _filter = require("lodash/filter");
 // const { queryFilter, categoryFilter } = require("./articles-filter-factory");
 // const { DatabaseError } = require("../util/errors");
@@ -19,8 +18,12 @@ export class ProductsRepository {
     return await this.baseRepository.findById(productId, Database.Tables.Products);
   }
 
-  async list(): Promise<IDbProduct[]> {
-    const products = await this.baseRepository.list<IDbProduct>(Database.Tables.Products);
+  async list({ page, size }: { page?: number; size?: number }): Promise<IDbProduct[]> {
+    const products = await this.baseRepository.list<IDbProduct>(Database.Tables.Products, {
+      size,
+      offset: page * size,
+      orderBy: "Code",
+    });
     return products.map((prod) => SqlHelper.toAppEntity(prod, Database.Tables.Products));
   }
 
@@ -38,7 +41,7 @@ export class ProductsRepository {
   }
 
   async listCodes(): Promise<number[]> {
-    const items = await this.baseRepository.list<{ Code: string }>(Database.Tables.Products, ["Code"]);
+    const items = await this.baseRepository.list<{ Code: string }>(Database.Tables.Products, { fields: ["Code"] });
     return items.map((item) => parseInt(item.Code));
   }
 

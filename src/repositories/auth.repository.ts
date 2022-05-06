@@ -19,6 +19,10 @@ export class AuthRepository {
     });
   }
 
+  async userInfo(accessToken: TokenSet | string): Promise<any> {
+    return await this.userClient.userinfo(accessToken);
+  }
+
   async authorize(context) {
     // TODO: check roles and groups
     return await this.verifyToken(context.accessToken);

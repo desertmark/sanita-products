@@ -1,5 +1,5 @@
 import { inject } from "inversify";
-import { controller, httpGet, httpPost, request, response } from "inversify-express-utils";
+import { controller, httpGet, httpPost, queryParam, request, requestBody, response } from "inversify-express-utils";
 import { ProductsRepository } from "@repositories/products.repository";
 import { Response } from "express";
 import { Request } from "tedious";
@@ -24,10 +24,10 @@ export class ProductsController {
   ) {}
 
   @httpGet("/")
-  async list(): Promise<any> {
+  async list(@queryParam('page') page = '0', @queryParam('size') size = '20'): Promise<any> {
     try {
       const total = await this.products.count();
-      const items = await this.productManager.list();
+      const items = await this.productManager.list(parseInt(page), parseInt(size));
       return {
         total,
         items,

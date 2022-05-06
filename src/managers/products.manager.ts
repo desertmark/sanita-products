@@ -15,8 +15,8 @@ export class ProductsManager {
     @inject("config") private config: IConfig
   ) {}
 
-  async list(): Promise<IProduct[]> {
-    const products = await this.products.list();
+  async list(page: number, size: number): Promise<IProduct[]> {
+    const products = await this.products.list({ page, size });
     return products.map(ProductMapper.fromDbToProduct);
   }
 
