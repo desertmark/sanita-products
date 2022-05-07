@@ -1,9 +1,10 @@
 import { IConfig } from "@config/config";
 import { Database, SqlColDefinition } from "@models/database.model";
+import { SqlHelper } from "@utils/common.utils";
 import { Logger } from "@utils/logger";
 import { inject, injectable } from "inversify";
+import { TYPE } from "inversify-express-utils";
 import { ColumnValue, Connection, ParameterOptions, Request, TediousType, TYPES } from "tedious";
-
 export interface SqlParameter {
   name: string;
   type: TediousType;
@@ -14,11 +15,19 @@ export interface SqlParameter {
 export interface SqlQueryOptions {
   timeout?: number;
 }
+
+export interface SqlWhereCondition {
+  fieldName: string;
+  value: string | number | boolean | Date;
+  operation: "=" | "LIKE";
+}
+
 export interface SqlListOptions {
   fields?: string[];
   orderBy?: string;
   size?: number;
   offset?: number;
+  where?: SqlWhereCondition[];
 }
 
 @injectable()
@@ -134,24 +143,29 @@ export class SqlBaseRepository {
   }
 
   async list<T>(tableName: string, options: SqlListOptions = { orderBy: "Id", offset: 0, size: 100 }): Promise<T[]> {
-    const { fields, offset, orderBy, size } = { orderBy: "Id", offset: 0, size: 100, ...options };
+    const { fields, offset, orderBy, size, where } = { orderBy: "Id", offset: 0, size: 100, ...options };
+
+    const { whereClause, sqlParams } = SqlHelper.buildListWhereClause(where);
+
     const sql = `
       SELECT ${fields || "*"} FROM [${tableName}]
+      ${whereClause}
       ORDER BY ${orderBy}
       OFFSET ${offset} ROWS FETCH NEXT ${size} ROWS ONLY
     `;
-    return await this.executeQuery(sql);
+    return await this.executeQuery(sql, sqlParams);
   }
 
-  async count(tableName: string): Promise<number> {
+  async count(tableName: string, where?: SqlWhereCondition[]): Promise<number> {
+    const { whereClause, sqlParams } = SqlHelper.buildListWhereClause(where);
+
     const sql = `
       SELECT COUNT(*) AS count FROM [${tableName}]
+      ${whereClause}
     `;
-    const res = await this.executeQuery<{ count: number }>(sql);
+    const res = await this.executeQuery<{ count: number }>(sql, sqlParams);
     return res[0].count;
   }
-
-  // async existBy(tableName: string, field)
 
   async executeQuery<T extends Record<string, any>>(
     sql: string,
@@ -175,7 +189,7 @@ export class SqlBaseRepository {
         rows.push(row);
       });
       req.on("requestCompleted", () => res(rows));
-      params?.forEach((param) => req.addParameter.apply(req, param));
+      params?.forEach(({ name, type, value, options }) => req.addParameter(name, type, value, options));
 
       if (options?.timeout) {
         req.setTimeout(options.timeout);

@@ -5,11 +5,12 @@ import { Response } from "express";
 import { Request } from "tedious";
 import { IFile, ParseManager } from "@managers/parse.manager";
 import { CategoriesRepository } from "@repositories/categories.repository";
-import { IGuidoliProduct, IProducto } from "@models/product.models";
+import { IGuidoliProduct, IProducto, ListProductFilters } from "@models/product.models";
 import { CategoryMapper } from "@utils/category.utils";
 import { ProductMapper } from "@utils/product.utils";
 import { ProductsManager } from "@managers/products.manager";
 import { CategoriesManager } from "@managers/categories.manager";
+import { PaginatedParams } from "@models/common.models";
 
 type RequestWithFile = Request & { files?: Record<string, any> };
 
@@ -24,10 +25,25 @@ export class ProductsController {
   ) {}
 
   @httpGet("/")
-  async list(@queryParam('page') page = '0', @queryParam('size') size = '20'): Promise<any> {
+  async list(
+    @queryParam("page") page = "0",
+    @queryParam("size") size = "20",
+    @queryParam("description") description?: string,
+    @queryParam("codeString") codeString?: string
+  ): Promise<any> {
     try {
-      const total = await this.products.count();
-      const items = await this.productManager.list(parseInt(page), parseInt(size));
+      const filters: ListProductFilters = {
+        description,
+        codeString,
+      };
+
+      const total = await this.products.count(filters);
+      const items = await this.productManager.list({
+        page: parseInt(page),
+        size: parseInt(size),
+        filters,
+      });
+
       return {
         total,
         items,

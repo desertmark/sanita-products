@@ -1,6 +1,9 @@
 import { Database, SqlTableDefinition } from "@models/database.model";
 import { camelCase, update } from "lodash";
-import { queryParam as inversifyQueryParamDecorator } from 'inversify-express-utils';
+import { queryParam as inversifyQueryParamDecorator } from "inversify-express-utils";
+import { TYPES } from "tedious";
+import { SqlParameter, SqlWhereCondition } from "@repositories/sql-base.repository";
+import { SqlListWhereClause } from "@models/common.models";
 
 export class CommonUtils {
   static capitalize(str: string) {
@@ -110,7 +113,6 @@ export class SqlHelper {
         return value;
     }
   }
-
   /**
    * It will use the Database table definition column names and parsers to parse the recovered record from the database into an typescript entity
    * with camelCase keys.
@@ -124,5 +126,27 @@ export class SqlHelper {
       entity[col.name] = col?.parser ? col.parser(dbRecord[col.name]) : dbRecord[col.name];
     });
     return CommonUtils.toCamelCaseRecord(entity);
+  }
+  /**
+   * Builds the where clause and the sql params for the where clause based on the given conditions if any.
+   */
+  static buildListWhereClause(conditions: SqlWhereCondition[]): SqlListWhereClause {
+    const whereClause = conditions?.length
+      ? `WHERE ${conditions
+          ?.map((condition) => `${condition.fieldName} ${condition.operation} @${condition.fieldName}`)
+          .join(" AND ")}`
+      : "";
+
+    const sqlParams: SqlParameter[] = conditions?.map((condition) => {
+      return {
+        name: condition.fieldName,
+        value: condition.value,
+        type: TYPES.VarChar,
+      };
+    });
+    return {
+      whereClause,
+      sqlParams,
+    };
   }
 }

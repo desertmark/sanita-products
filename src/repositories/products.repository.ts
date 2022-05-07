@@ -1,10 +1,12 @@
 import { Database } from "@models/database.model";
-import { IDiscount, IProduct, IDbProduct } from "@models/product.models";
+import { IDiscount, IProduct, IDbProduct, ListProductFilters } from "@models/product.models";
 import { SqlHelper } from "@utils/common.utils";
 import { ProductMapper } from "@utils/product.utils";
 import { inject, injectable } from "inversify";
-import { SqlBaseRepository } from "./sql-base.repository";
+import { SqlBaseRepository, SqlWhereCondition } from "./sql-base.repository";
 import fs from "fs";
+import { PaginatedParams } from "@models/common.models";
+import { filter } from "lodash";
 // const _filter = require("lodash/filter");
 // const { queryFilter, categoryFilter } = require("./articles-filter-factory");
 // const { DatabaseError } = require("../util/errors");
@@ -18,11 +20,12 @@ export class ProductsRepository {
     return await this.baseRepository.findById(productId, Database.Tables.Products);
   }
 
-  async list({ page, size }: { page?: number; size?: number }): Promise<IDbProduct[]> {
+  async list({ page, size, filters }: PaginatedParams<ListProductFilters>): Promise<IDbProduct[]> {
     const products = await this.baseRepository.list<IDbProduct>(Database.Tables.Products, {
       size,
       offset: page * size,
       orderBy: "Code",
+      where: this.mapFilterToWhere(filters),
     });
     return products.map((prod) => SqlHelper.toAppEntity(prod, Database.Tables.Products));
   }
@@ -36,8 +39,8 @@ export class ProductsRepository {
     return products.map((prod) => SqlHelper.toAppEntity(prod, Database.Tables.Products));
   }
 
-  async count(): Promise<number> {
-    return await this.baseRepository.count(Database.Tables.Products);
+  async count(filters?: ListProductFilters): Promise<number> {
+    return await this.baseRepository.count(Database.Tables.Products, this.mapFilterToWhere(filters));
   }
 
   async listCodes(): Promise<number[]> {
@@ -81,5 +84,25 @@ export class ProductsRepository {
       )
       .join("");
     await this.baseRepository.executeQuery(sql);
+  }
+
+  private mapFilterToWhere(filters: ListProductFilters): SqlWhereCondition[] {
+    const where: SqlWhereCondition[] = [];
+    if (filters.description) {
+      where.push({
+        fieldName: "description",
+        operation: "LIKE",
+        value: `${filters.description}%`,
+      });
+    }
+
+    if (filters.codeString) {
+      where.push({
+        fieldName: "codeString",
+        operation: "LIKE",
+        value: `${filters.codeString}%`,
+      });
+    }
+    return where;
   }
 }

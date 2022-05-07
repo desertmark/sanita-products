@@ -125,3 +125,8 @@ export interface ProductResponse {
   items: Omit<IProduct, "discount">[];
   total: number;
 }
+
+export interface ListProductFilters {
+  description: string;
+  codeString: string;
+}

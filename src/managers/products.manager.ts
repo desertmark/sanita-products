@@ -1,5 +1,6 @@
 import { IConfig } from "@config/config";
-import { IDbInsertProduct, IGuidoliProduct, IInsertProduct, IProduct } from "@models/product.models";
+import { PaginatedParams } from "@models/common.models";
+import { IDbInsertProduct, IGuidoliProduct, IInsertProduct, IProduct, ListProductFilters } from "@models/product.models";
 import { ProductsRepository } from "@repositories/products.repository";
 import { Logger } from "@utils/logger";
 import { ProductMapper } from "@utils/product.utils";
@@ -15,8 +16,8 @@ export class ProductsManager {
     @inject("config") private config: IConfig
   ) {}
 
-  async list(page: number, size: number): Promise<IProduct[]> {
-    const products = await this.products.list({ page, size });
+  async list(options: PaginatedParams<ListProductFilters>): Promise<IProduct[]> {
+    const products = await this.products.list(options);
     return products.map(ProductMapper.fromDbToProduct);
   }
 
