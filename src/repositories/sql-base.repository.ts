@@ -150,7 +150,7 @@ export class SqlBaseRepository {
     const sql = `
       SELECT ${fields || "*"} FROM [${tableName}]
       ${whereClause}
-      ORDER BY ${orderBy}
+      ORDER BY ${orderBy} ASC
       OFFSET ${offset} ROWS FETCH NEXT ${size} ROWS ONLY
     `;
     return await this.executeQuery(sql, sqlParams);

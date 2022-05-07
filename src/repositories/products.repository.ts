@@ -24,7 +24,6 @@ export class ProductsRepository {
     const products = await this.baseRepository.list<IDbProduct>(Database.Tables.Products, {
       size,
       offset: page * size,
-      orderBy: "Code",
       where: this.mapFilterToWhere(filters),
     });
     return products.map((prod) => SqlHelper.toAppEntity(prod, Database.Tables.Products));
