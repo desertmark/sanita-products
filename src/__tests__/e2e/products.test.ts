@@ -78,38 +78,61 @@ describe("Products E2E test", () => {
       expect(res.data.total).toBe(2);
     });
 
-    fit("Should return products page by page", async () => {
-      // Arrange
-      const products = [
-        productFactory("00.00.00.01"),
-        productFactory("00.00.00.02"),
-        productFactory("00.00.00.03"),
-        productFactory("00.00.00.04"),
-      ];
-      await Promise.all(
-        products.map((p) => baseRepository.executeQuery(SqlHelper.insertTemplate(Database.Tables.Products, p)))
-      );
+    describe("Test queryString paramters", () => {
+      let products: IDbInsertProduct[];
+      beforeEach(async () => {
+        // Arrange
+        products = [
+          productFactory("00.00.00.01"),
+          productFactory("00.00.00.02"),
+          productFactory("00.00.00.03"),
+          productFactory("00.00.00.04"),
+        ];
+        await Promise.all(
+          products.map((p) => baseRepository.executeQuery(SqlHelper.insertTemplate(Database.Tables.Products, p)))
+        );
+      });
 
-      // Act
-      const page0 = await client.get<ProductResponse>("/products?page=0&size=2");
-      const page1 = await client.get<ProductResponse>("/products?page=1&size=2");
+      it("Should return products page by page", async () => {
+        // Act
+        const page0 = await client.get<ProductResponse>("/products?page=0&size=2");
+        const page1 = await client.get<ProductResponse>("/products?page=1&size=2");
+        // Assert
+        expect(page0.data.items.length).toBe(2);
+        expect(page1.data.items.length).toBe(2);
+        expect(page0.data.items).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ codeString: "00.00.00.01" }),
+            expect.objectContaining({ codeString: "00.00.00.02" }),
+          ])
+        );
+        expect(page1.data.items).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ codeString: "00.00.00.03" }),
+            expect.objectContaining({ codeString: "00.00.00.04" }),
+          ])
+        );
+      });
 
-      // Assert
-      expect(page0.data.items.length).toBe(2);
-      expect(page1.data.items.length).toBe(2);
+      fit("Should filter by codeString", async () => {
+        // Act
+        const res = await client.get<ProductResponse>("/products?codeString=00.00.00.03");
+        // Assert
+        expect(res.data.items.length).toBe(1);
+        expect(res.data.items).toEqual(
+          expect.arrayContaining([expect.objectContaining({ codeString: "00.00.00.03" })])
+        );
+      });
 
-      expect(page0.data.items).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ codeString: "00.00.00.01" }),
-          expect.objectContaining({ codeString: "00.00.00.02" }),
-        ])
-      );
-      expect(page1.data.items).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ codeString: "00.00.00.03" }),
-          expect.objectContaining({ codeString: "00.00.00.04" }),
-        ])
-      );
+      it("Should filter by description", async () => {
+        // Arrange
+        const description = products[2].description;
+        // Act
+        const res = await client.get<ProductResponse>(`/products?description=${description}`);
+        // Assert
+        expect(res.data.items.length).toBe(1);
+        expect(res.data.items).toEqual(expect.arrayContaining([expect.objectContaining({ description })]));
+      });
     });
   });
 
