@@ -20,6 +20,7 @@ const Int = TYPES.Int.name;
 const String = `${TYPES.VarChar.name}(255)`;
 const Decimal = `${TYPES.Decimal.name}(10,2)`;
 const Money = TYPES.Money.name;
+
 export class Database {
   public static readonly Tables = {
     Products: "Products",
@@ -72,4 +73,14 @@ export class Database {
       },
     ] as SqlTableDefinition[],
   };
+
+  static getTableColumn(tableName: string, columName: string): SqlColDefinition {
+    return Database.Schema.Tables.find((t) => t.name == tableName)?.cols?.find(
+      (c) => c.name.toLowerCase() === columName?.toLowerCase()
+    );
+  }
+
+  static sanitizeColumnName(tableName: string, columName: string) {
+    return this.getTableColumn(tableName, columName)?.name;
+  }
 }

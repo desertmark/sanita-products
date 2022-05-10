@@ -1,6 +1,5 @@
-import { Database, SqlTableDefinition } from "@models/database.model";
-import { camelCase, update } from "lodash";
-import { queryParam as inversifyQueryParamDecorator } from "inversify-express-utils";
+import { Database } from "@models/database.model";
+import { camelCase } from "lodash";
 import { TYPES } from "tedious";
 import { SqlParameter, SqlWhereCondition } from "@repositories/sql-base.repository";
 import { SqlListWhereClause } from "@models/common.models";
@@ -137,13 +136,14 @@ export class SqlHelper {
           .join(" AND ")}`
       : "";
 
-    const sqlParams: SqlParameter[] = conditions?.map((condition) => {
-      return {
-        name: condition.fieldName,
-        value: condition.value,
-        type: TYPES.VarChar,
-      };
-    });
+    const sqlParams: SqlParameter[] =
+      conditions?.map((condition) => {
+        return {
+          name: condition.fieldName,
+          value: condition.value,
+          type: TYPES.VarChar,
+        };
+      }) || [];
     return {
       whereClause,
       sqlParams,

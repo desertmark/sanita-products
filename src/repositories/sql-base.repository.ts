@@ -2,6 +2,7 @@ import { IConfig } from "@config/config";
 import { Database, SqlColDefinition } from "@models/database.model";
 import { SqlHelper } from "@utils/common.utils";
 import { Logger } from "@utils/logger";
+import { table } from "console";
 import { inject, injectable } from "inversify";
 import { TYPE } from "inversify-express-utils";
 import { ColumnValue, Connection, ParameterOptions, Request, TediousType, TYPES } from "tedious";
@@ -142,18 +143,26 @@ export class SqlBaseRepository {
     ]);
   }
 
-  async list<T>(tableName: string, options: SqlListOptions = { orderBy: "Id", offset: 0, size: 100 }): Promise<T[]> {
-    const { fields, offset, orderBy, size, where } = { orderBy: "Id", offset: 0, size: 100, ...options };
-
+  async list<T>(tableName: string, options: SqlListOptions = { offset: 0, size: 100 }): Promise<T[]> {
+    const { fields, offset, orderBy, size, where } = { offset: 0, size: 100, ...options };
     const { whereClause, sqlParams } = SqlHelper.buildListWhereClause(where);
 
+    // Sanitize user input
+    const orderColumn = Database.sanitizeColumnName(tableName, orderBy) || "Id";
+    const selectFields = fields?.map((f) => Database.sanitizeColumnName(tableName, f)) || "*";
+
     const sql = `
-      SELECT ${fields || "*"} FROM [${tableName}]
+      SELECT ${selectFields} FROM [${tableName}]
       ${whereClause}
-      ORDER BY ${orderBy} ASC
-      OFFSET ${offset} ROWS FETCH NEXT ${size} ROWS ONLY
+      ORDER BY [${tableName}].[${orderColumn}] ASC
+      OFFSET @offset ROWS FETCH NEXT @size ROWS ONLY
     `;
-    return await this.executeQuery(sql, sqlParams);
+
+    return await this.executeQuery(sql, [
+      { name: "offset", value: offset, type: TYPES.Int },
+      { name: "size", value: size, type: TYPES.Int },
+      ...sqlParams,
+    ]);
   }
 
   async count(tableName: string, where?: SqlWhereCondition[]): Promise<number> {

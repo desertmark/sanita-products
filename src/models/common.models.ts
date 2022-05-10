@@ -14,6 +14,7 @@ export interface PaginatedParams<T> {
   page?: number;
   size?: number;
   filters?: T;
+  sort?: string;
 }
 
 export interface SqlListWhereClause {

@@ -29,7 +29,8 @@ export class ProductsController {
     @queryParam("page") page = "0",
     @queryParam("size") size = "20",
     @queryParam("description") description?: string,
-    @queryParam("codeString") codeString?: string
+    @queryParam("codeString") codeString?: string,
+    @queryParam("sort") sort?: string
   ): Promise<any> {
     try {
       const filters: ListProductFilters = {
@@ -42,6 +43,7 @@ export class ProductsController {
         page: parseInt(page),
         size: parseInt(size),
         filters,
+        sort
       });
 
       return {

@@ -20,11 +20,12 @@ export class ProductsRepository {
     return await this.baseRepository.findById(productId, Database.Tables.Products);
   }
 
-  async list({ page, size, filters }: PaginatedParams<ListProductFilters>): Promise<IDbProduct[]> {
+  async list({ page, size, filters, sort }: PaginatedParams<ListProductFilters>): Promise<IDbProduct[]> {
     const products = await this.baseRepository.list<IDbProduct>(Database.Tables.Products, {
       size,
       offset: page * size,
       where: this.mapFilterToWhere(filters),
+      orderBy: sort
     });
     return products.map((prod) => SqlHelper.toAppEntity(prod, Database.Tables.Products));
   }

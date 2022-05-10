@@ -83,10 +83,10 @@ describe("Products E2E test", () => {
       beforeEach(async () => {
         // Arrange
         products = [
-          productFactory("00.00.00.01"),
-          productFactory("00.00.00.02"),
-          productFactory("00.00.00.03"),
-          productFactory("00.00.00.04"),
+          productFactory("00.00.00.01", { price: 1000 }),
+          productFactory("00.00.00.02", { price: 900 }),
+          productFactory("00.00.00.03", { price: 700 }),
+          productFactory("00.00.00.04", { price: 800 }),
         ];
         await Promise.all(
           products.map((p) => baseRepository.executeQuery(SqlHelper.insertTemplate(Database.Tables.Products, p)))
@@ -114,7 +114,7 @@ describe("Products E2E test", () => {
         );
       });
 
-      fit("Should filter by codeString", async () => {
+      it("Should filter by codeString", async () => {
         // Act
         const res = await client.get<ProductResponse>("/products?codeString=00.00.00.03");
         // Assert
@@ -132,6 +132,16 @@ describe("Products E2E test", () => {
         // Assert
         expect(res.data.items.length).toBe(1);
         expect(res.data.items).toEqual(expect.arrayContaining([expect.objectContaining({ description })]));
+      });
+
+      it("Should order by the price asc", async () => {
+        // Act
+        const res = await client.get<ProductResponse>(`/products?sort=price`);
+        const [p1, p2, p3, p4] = res.data.items;
+        // Assert
+        expect(p1?.price).toBeLessThanOrEqual(p2?.price);
+        expect(p2?.price).toBeLessThanOrEqual(p3?.price);
+        expect(p3?.price).toBeLessThanOrEqual(p4?.price);
       });
     });
   });
